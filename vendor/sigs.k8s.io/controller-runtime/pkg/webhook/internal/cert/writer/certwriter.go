@@ -28,8 +28,6 @@ import (
 )
 
 const (
-	// CAKeyName is the name of the CA private key
-	CAKeyName = "ca-key.pem"
 	// CACertName is the name of the CA certificate
 	CACertName = "ca-cert.pem"
 	// ServerKeyName is the name of the server private key
@@ -41,7 +39,7 @@ const (
 // CertWriter provides method to handle webhooks.
 type CertWriter interface {
 	// EnsureCert provisions the cert for the webhookClientConfig.
-	EnsureCert(dnsName string) (*generator.Artifacts, bool, error)
+	EnsureCert(dnsName string, dryrun bool) (*generator.Artifacts, bool, error)
 	// Inject injects the necessary information given the objects.
 	// It supports MutatingWebhookConfiguration and ValidatingWebhookConfiguration.
 	Inject(objs ...runtime.Object) error
@@ -95,7 +93,7 @@ func createIfNotExists(ch certReadWriter) (*generator.Artifacts, bool, error) {
 
 // certReadWriter provides methods for reading and writing certificates.
 type certReadWriter interface {
-	// read reads a webhook name and returns the certs for it.
+	// read reads a wehbook name and returns the certs for it.
 	read() (*generator.Artifacts, error)
 	// write writes the certs and return the certs it wrote.
 	write() (*generator.Artifacts, error)
