@@ -20,12 +20,6 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/beorn7/perks"
-  packages = ["quantile"]
-  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
@@ -190,12 +184,6 @@
   revision = "81af80346b1a01caae0cbc27fd3c1ba5b11e189f"
 
 [[projects]]
-  name = "github.com/matttproud/golang_protobuf_extensions"
-  packages = ["pbutil"]
-  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
-  version = "v1.0.1"
-
-[[projects]]
   name = "github.com/modern-go/concurrent"
   packages = ["."]
   revision = "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94"
@@ -235,43 +223,6 @@
   packages = ["."]
   revision = "5f041e8faa004a95c88a202771f4cc3e991971e6"
   version = "v2.0.1"
-
-[[projects]]
-  name = "github.com/prometheus/client_golang"
-  packages = [
-    "prometheus",
-    "prometheus/internal",
-    "prometheus/promhttp"
-  ]
-  revision = "505eaef017263e299324067d40ca2c48f6a2cf50"
-  version = "v0.9.2"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/prometheus/client_model"
-  packages = ["go"]
-  revision = "5c3871d89910bfb32f5fcab2aa4b9ec68e65a99f"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/prometheus/common"
-  packages = [
-    "expfmt",
-    "internal/bitbucket.org/ww/goautoneg",
-    "model"
-  ]
-  revision = "4724e9255275ce38f7179b2478abeae4e28c904f"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/prometheus/procfs"
-  packages = [
-    ".",
-    "internal/util",
-    "nfs",
-    "xfs"
-  ]
-  revision = "1dc9a6cbc91aacc3e8b2d63db4d2e957a5394ac4"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -641,7 +592,6 @@
     "pkg/internal/recorder",
     "pkg/leaderelection",
     "pkg/manager",
-    "pkg/metrics",
     "pkg/patch",
     "pkg/recorder",
     "pkg/runtime/inject",
@@ -651,12 +601,11 @@
     "pkg/webhook/admission/types",
     "pkg/webhook/types"
   ]
-  revision = "c63ebda0bf4be5f0a8abd4003e4ea546032545ba"
-  version = "v0.1.8"
+  revision = "53fc44b56078cd095b11bd44cfa0288ee4cf718f"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fac99b538e6645002dda94875ce4b76df6186c30787e5958a649aad0dd409ffa"
+  inputs-digest = "18427236a8dbac4a757c582e116723a019c9d5e518e69d6a3a3ae458c805bb4d"
   solver-name = "gps-cdcl"
   solver-version = 1
