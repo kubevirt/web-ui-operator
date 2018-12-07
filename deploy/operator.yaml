@@ -16,7 +16,7 @@ spec:
       containers:
         - name: kubevirt-web-ui-operator
           # Replace this with the built image name
-          image: REPLACE_IMAGE
+          image: quay.io/mareklibra/kubevirt-web-ui-operator
           ports:
           - containerPort: 60000
             name: metrics
