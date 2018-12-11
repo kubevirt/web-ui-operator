@@ -19,7 +19,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: kubevirt-web-ui-operator
-  namespace: app-operator
+  namespace: kubevirt-web-ui
 roleRef:
   kind: Role
   name: kubevirt-web-ui-operator
