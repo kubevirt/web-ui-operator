@@ -20,7 +20,24 @@ To make it work, kubeconfig is recomposed by the operator based on in-cluster-co
 TBD
 
 ## How to Run
-TBD
+```angular2
+oc new-project kubevirt-web-ui
+```
+
+```angular2
+oc apply -f deploy/service_account.yaml
+oc apply -f deploy/role.yaml
+oc apply -f deploy/role_binding.yaml
+oc apply -f deploy/crds/kubevirt_v1alpha1_appservice_crd.yaml
+oc apply -f deploy/operator.yaml 
+```
+
+```angular2
+oc apply -f deploy/crds/kubevirt_v1alpha1_appservice_cr.yaml
+```
+
+TBD: generic URL of yaml files
+TBD: change version
 
 ## Authors
 - Marek Libra
