@@ -15,6 +15,7 @@ rules:
   - configmaps
   - secrets
   - replicationcontrollers
+  - serviceaccounts
   verbs:
   - '*'
 - apiGroups:
@@ -47,6 +48,12 @@ rules:
   - '*'
 - apiGroups:
   - template.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - route.openshift.io
   resources:
   - '*'
   verbs:
