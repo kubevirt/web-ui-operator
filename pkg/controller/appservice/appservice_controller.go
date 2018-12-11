@@ -2,16 +2,21 @@ package appservice
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+//	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	kubevirtv1alpha1 "kubevirt.io/kubevirt-web-ui-operator/pkg/apis/kubevirt/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+//	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -51,6 +56,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+/*
 	// TODO(user): Modify this to be the types you create that are owned by the primary resource
 	// Watch for changes to secondary resource Pods and requeue the owner AppService
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
@@ -60,7 +66,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if err != nil {
 		return err
 	}
-
+*/
 	return nil
 }
 
@@ -98,36 +104,121 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+	reqLogger.Info("Desired kubevirt-web-ui version", "instance.Spec.Version", instance.Spec.Version)
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
-
-	// Set AppService instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+	// Fetch the kubevirt-web-ui ReplicaSet
+	replicaSet := &corev1.ReplicationController{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, replicaSet)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Kubevirt-web-ui deployment is not present yet
+			reqLogger.Info("kubevirt-web-ui ReplicaSet is not present. Ansible playbook will be executed to provision it.")
+			loginClient()
+			provisionKubevirtWebUI()
+			// TODO: start ansible playbook to provision
+			// TODO: log ansible Log output
+			// TODO: return based on exit code
+			// TODO: consider setting owner reference
+			return reconcile.Result{}, nil
+		}
+		reqLogger.Info("kubevirt-web-ui ReplicaSet failed to be retrieved. Re-trying in a moment.", "error", err)
+		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
-		if err != nil {
+	// ReplicaSet found
+	// TODO: check installed version and optionally deprovision-provision
+	// It should be enough to just re-execute the provision process and restart kubevirt-web-ui pod to read the updated ConfigMap. But deprovision is safe to address potential incompatible changes.
+
+	return reconcile.Result{}, nil
+
+	/*
+		// Define a new Pod object
+		pod := newPodForCR(instance)
+
+		// Set AppService instance as the owner and controller
+		if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
 			return reconcile.Result{}, err
 		}
 
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
-	}
+		// Check if this Pod already exists
+		found := &corev1.Pod{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+		if err != nil && errors.IsNotFound(err) {
+			reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
+			err = r.client.Create(context.TODO(), pod)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
-	return reconcile.Result{}, nil
+			// Pod created successfully - don't requeue
+			return reconcile.Result{}, nil
+		} else if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// Pod already exists - don't requeue
+		reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+		return reconcile.Result{}, nil
+	*/
 }
 
+const TOKEN_FILE = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+const CA_FILE = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
+func loginClient() {
+	tokenBytes, err := ioutil.ReadFile(TOKEN_FILE)
+	if err != nil {
+		log.Error(err, fmt.Sprintf("The k8s token can not be read from: %s", TOKEN_FILE))
+	}
+	serverUrl := "https://openshift.mlibra7.lab.pnq2.cee.redhat.com:443" // TODO: see rest/config.go InClusterConfig
+	cmd, args := "oc", []string{
+		"login",
+		serverUrl,
+		fmt.Sprintf("--certificate-authority=%s", CA_FILE),
+		fmt.Sprintf("--token=%s", string(tokenBytes)),
+	}
+	env := []string{"KUBECONFIG=/tmp/config"}
+
+	command := exec.Command(cmd, args...)
+	command.Env = append(os.Environ(), env...)
+	out, err := command.CombinedOutput()
+	if err != nil {
+		log.Error(err, fmt.Sprintf("Execution failed: %s", cmd))
+	}
+	logPerLine("Login output:", string(out[:]))
+}
+
+func provisionKubevirtWebUI() {
+	// TODO: create inventory file, set parameters
+	// run ansible-playbook
+
+
+	// Just for test:
+	cmd, args := "oc", []string{
+		"get",
+		"pods",
+	}
+	env := []string{"KUBECONFIG=/tmp/config"}
+
+	command := exec.Command(cmd, args...)
+	command.Env = append(os.Environ(), env...)
+	out, err := command.CombinedOutput()
+	if err != nil {
+		log.Error(err, fmt.Sprintf("Execution failed: %s", cmd))
+	}
+	logPerLine("Test output:", string(out[:]))
+}
+
+func logPerLine(header string, out string) {
+	log.Info(header)
+	for _,line := range strings.Split(out, "\n") {
+		log.Info(line)
+	}
+}
+
+
+/*
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
 func newPodForCR(cr *kubevirtv1alpha1.AppService) *corev1.Pod {
 	labels := map[string]string{
@@ -150,3 +241,4 @@ func newPodForCR(cr *kubevirtv1alpha1.AppService) *corev1.Pod {
 		},
 	}
 }
+*/

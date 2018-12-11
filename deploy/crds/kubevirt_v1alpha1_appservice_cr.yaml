@@ -1,7 +1,7 @@
 apiVersion: kubevirt.io/v1alpha1
 kind: AppService
 metadata:
-  name: example-appservice
+  name: kubevirt-web-ui
 spec:
   # Add fields here
-  size: 3
+  version: "12345"

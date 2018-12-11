@@ -9,6 +9,7 @@ import (
 
 // AppServiceSpec defines the desired state of AppService
 type AppServiceSpec struct {
+	Version  string `json:"version,omitempty"`	// the desired kubevirt-web-ui version to be installed
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -51,6 +52,8 @@ func main() {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+	s,_ := json.Marshal(cfg)
+	log.Info("Configuration read: ", "config", s)
 
 	// Become the leader before proceeding
 	leader.Become(context.TODO(), "kubevirt-web-ui-operator-lock")
