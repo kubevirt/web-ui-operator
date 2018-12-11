@@ -115,8 +115,8 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 			// TODO: add error handling of inner-steps
 			// Kubevirt-web-ui deployment is not present yet
 			reqLogger.Info("kubevirt-web-ui ReplicaSet is not present. Ansible playbook will be executed to provision it.")
-			loginClient()
-			generateInventory(instance, "provision")
+			loginClient(request)
+			generateInventory(instance, request, "provision")
 			provisionKubevirtWebUI()
 			// TODO: start ansible playbook to provision
 			// TODO: log ansible Log output
@@ -166,11 +166,13 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	*/
 }
 
-func loginClient() {
+func loginClient(request reconcile.Request) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Failed to get in-cluster config"))
 	}
+
+	env := []string{"KUBECONFIG=/tmp/config"} // TODO: make the filename unique
 
 	cmd, args := "oc", []string{
 		"login",
@@ -178,7 +180,6 @@ func loginClient() {
 		fmt.Sprintf("--certificate-authority=%s", config.TLSClientConfig.CAFile),
 		fmt.Sprintf("--token=%s", config.BearerToken),
 	}
-	env := []string{"KUBECONFIG=/tmp/config"}
 
 	command := exec.Command(cmd, args...)
 	command.Env = append(os.Environ(), env...)
@@ -188,9 +189,21 @@ func loginClient() {
 		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(args," ")))
 	}
 	logPerLine("Login output:", string(out[:]))
+
+	cmd, args = "oc", []string{
+		"project",
+		request.Namespace,
+	}
+	command = exec.Command(cmd, args...)
+	command.Env = append(os.Environ(), env...)
+	out, err = command.CombinedOutput()
+	if err != nil {
+		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(args," ")))
+	}
+	logPerLine("Change project output:", string(out[:]))
 }
 
-func generateInventory(instance *kubevirtv1alpha1.AppService, action string) error {
+func generateInventory(instance *kubevirtv1alpha1.AppService, request reconcile.Request, action string) error {
 	log.Info("Writing inventory file")
 	f, err := os.Create(InventoryFile)
 	if err != nil {
@@ -205,6 +218,7 @@ func generateInventory(instance *kubevirtv1alpha1.AppService, action string) err
 	f.WriteString(strings.Join([]string{"registry_url=", def(instance.Spec.RegistryUrl, "quay.io"), "\n"}, ""))
 	f.WriteString(strings.Join([]string{"registry_namespace=", def(instance.Spec.RegistryNamespace, "kubevirt"), "\n"}, ""))
 	f.WriteString(strings.Join([]string{"docker_tag=", def(instance.Spec.Version, "v1.4"), "\n"}, ""))
+	f.WriteString(strings.Join([]string{"kubevirt_web_ui_namespace=", def(request.Namespace, "kubevirt-web-ui"), "\n"}, ""))
 	f.WriteString("\n")
 	f.WriteString("[masters]\n")
 	_, err = f.WriteString("127.0.0.1 ansible_connection=local\n")
@@ -218,7 +232,7 @@ func generateInventory(instance *kubevirtv1alpha1.AppService, action string) err
 }
 
 func provisionKubevirtWebUI() error {
-	// TODO: create inventory file, set parameters
+	// TODO: ansible-playbook -i /tmp/inventory.ini /kubevirt-web-ui-ansible/playbooks/kubevirt-web-ui/config.yml -vvv
 	// run ansible-playbook
 
 	// Just for test:
