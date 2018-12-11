@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+const InventoryFile = "/tmp/inventory.ini"
 var log = logf.Log.WithName("controller_appservice")
 
 /**
@@ -111,9 +112,11 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, replicaSet)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			// TODO: add error handling of inner-steps
 			// Kubevirt-web-ui deployment is not present yet
 			reqLogger.Info("kubevirt-web-ui ReplicaSet is not present. Ansible playbook will be executed to provision it.")
 			loginClient()
+			generateInventory(instance, "provision")
 			provisionKubevirtWebUI()
 			// TODO: start ansible playbook to provision
 			// TODO: log ansible Log output
@@ -187,7 +190,34 @@ func loginClient() {
 	logPerLine("Login output:", string(out[:]))
 }
 
-func provisionKubevirtWebUI() {
+func generateInventory(instance *kubevirtv1alpha1.AppService, action string) error {
+	log.Info("Writing inventory file")
+	f, err := os.Create(InventoryFile)
+	if err != nil {
+		log.Error(err, "Failed to write inventory file")
+		return err
+	}
+	defer f.Close()
+	f.WriteString("[OSEv3:children]\nmasters\n\n")
+	f.WriteString("[OSEv3:vars]\n")
+	f.WriteString("platform=openshift\n")
+	f.WriteString(strings.Join([]string{"apb_action=", action, "\n"}, ""))
+	f.WriteString(strings.Join([]string{"registry_url=", def(instance.Spec.RegistryUrl, "quay.io"), "\n"}, ""))
+	f.WriteString(strings.Join([]string{"registry_namespace=", def(instance.Spec.RegistryNamespace, "kubevirt"), "\n"}, ""))
+	f.WriteString(strings.Join([]string{"docker_tag=", def(instance.Spec.Version, "v1.4"), "\n"}, ""))
+	f.WriteString("\n")
+	f.WriteString("[masters]\n")
+	_, err = f.WriteString("127.0.0.1 ansible_connection=local\n")
+	if err != nil {
+		log.Error(err, "Failed to write into the inventory file")
+		return err
+	}
+	f.Sync()
+	log.Info("The inventory file is written.")
+	return nil
+}
+
+func provisionKubevirtWebUI() error {
 	// TODO: create inventory file, set parameters
 	// run ansible-playbook
 
@@ -203,8 +233,11 @@ func provisionKubevirtWebUI() {
 	out, err := command.CombinedOutput()
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(args," ")))
+		return err
 	}
 	logPerLine("Test output:", string(out[:]))
+
+	return nil
 }
 
 func logPerLine(header string, out string) {
@@ -212,6 +245,13 @@ func logPerLine(header string, out string) {
 	for _,line := range strings.Split(out, "\n") {
 		log.Info(line)
 	}
+}
+
+func def(s string, defVal string) string {
+	if s == "" {
+		return defVal
+	}
+	return s
 }
 
 
