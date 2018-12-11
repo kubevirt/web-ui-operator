@@ -3,12 +3,12 @@ package appservice
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/rest"
 	"k8s.io/apimachinery/pkg/api/errors"
 //	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -163,20 +163,17 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	*/
 }
 
-const TOKEN_FILE = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-const CA_FILE = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-
 func loginClient() {
-	tokenBytes, err := ioutil.ReadFile(TOKEN_FILE)
+	config, err := rest.InClusterConfig()
 	if err != nil {
-		log.Error(err, fmt.Sprintf("The k8s token can not be read from: %s", TOKEN_FILE))
+		log.Error(err, fmt.Sprintf("Failed to get in-cluster config"))
 	}
-	serverUrl := "https://openshift.mlibra7.lab.pnq2.cee.redhat.com:443" // TODO: see rest/config.go InClusterConfig
+
 	cmd, args := "oc", []string{
 		"login",
-		serverUrl,
-		fmt.Sprintf("--certificate-authority=%s", CA_FILE),
-		fmt.Sprintf("--token=%s", string(tokenBytes)),
+		config.Host,
+		fmt.Sprintf("--certificate-authority=%s", config.TLSClientConfig.CAFile),
+		fmt.Sprintf("--token=%s", config.BearerToken),
 	}
 	env := []string{"KUBECONFIG=/tmp/config"}
 
@@ -184,7 +181,8 @@ func loginClient() {
 	command.Env = append(os.Environ(), env...)
 	out, err := command.CombinedOutput()
 	if err != nil {
-		log.Error(err, fmt.Sprintf("Execution failed: %s", cmd))
+		args[3] = "--token=[SECRET]"
+		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(args," ")))
 	}
 	logPerLine("Login output:", string(out[:]))
 }
@@ -192,7 +190,6 @@ func loginClient() {
 func provisionKubevirtWebUI() {
 	// TODO: create inventory file, set parameters
 	// run ansible-playbook
-
 
 	// Just for test:
 	cmd, args := "oc", []string{
@@ -205,7 +202,7 @@ func provisionKubevirtWebUI() {
 	command.Env = append(os.Environ(), env...)
 	out, err := command.CombinedOutput()
 	if err != nil {
-		log.Error(err, fmt.Sprintf("Execution failed: %s", cmd))
+		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(args," ")))
 	}
 	logPerLine("Test output:", string(out[:]))
 }
