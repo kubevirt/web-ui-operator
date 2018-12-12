@@ -1,0 +1,8 @@
+apiVersion: kubevirt.io/v1alpha1
+kind: AppService
+metadata:
+  name: kubevirt-web-ui
+spec:
+  version: "1.4"
+  registry_url: "quay.io"
+  registry_namespace: "kubevirt"
