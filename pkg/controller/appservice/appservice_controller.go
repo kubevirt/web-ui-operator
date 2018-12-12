@@ -120,11 +120,13 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 			if err != nil {
 				return reconcile.Result{}, err
 			}
+			defer removeFile(configFile)
 
 			inventoryFile, err := generateInventory(instance, request, "provision")
 			if err != nil {
 				return reconcile.Result{}, err
 			}
+			defer removeFile(inventoryFile)
 
 			err = runPlaybook(inventoryFile, configFile)
 			// TODO: consider setting owner reference
@@ -275,6 +277,12 @@ func def(s string, defVal string) string {
 	return s
 }
 
+func removeFile(name string) {
+	err := os.Remove(name)
+	if err != nil {
+		log.Error(err, fmt.Sprintf("Failed to remove file: %s", name))
+	}
+}
 
 /*
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
