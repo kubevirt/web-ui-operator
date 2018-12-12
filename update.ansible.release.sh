@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo This script updates kubevirt-web-ui ansible playbook by eztracting it from kubevirt-ansible
+echo This script updates kubevirt-web-ui ansible playbook by extracting it from kubevirt-ansible official release
 
 function usage {
   # https://github.com/kubevirt/kubevirt-ansible/archive/v0.9.2.tar.gz
