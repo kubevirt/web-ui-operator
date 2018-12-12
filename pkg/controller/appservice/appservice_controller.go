@@ -114,26 +114,9 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, replicaSet)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Kubevirt-web-ui deployment is not present yet
-			reqLogger.Info("kubevirt-web-ui ReplicaSet is not present. Ansible playbook will be executed to provision it.")
-			configFile, err := loginClient(request.Namespace)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			defer removeFile(configFile)
-
-			inventoryFile, err := generateInventory(instance, request, "provision")
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			defer removeFile(inventoryFile)
-
-			err = runPlaybook(inventoryFile, configFile)
-			// TODO: consider setting owner reference
-			return reconcile.Result{}, err
+			return freshProvision(request.Namespace, instance)
 		}
 		reqLogger.Info("kubevirt-web-ui ReplicaSet failed to be retrieved. Re-trying in a moment.", "error", err)
-		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
@@ -174,6 +157,26 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	*/
 }
 
+func freshProvision(namespace string, instance *kubevirtv1alpha1.AppService) (reconcile.Result, error) {
+	// Kubevirt-web-ui deployment is not present yet
+	log.Info("kubevirt-web-ui ReplicaSet is not present. Ansible playbook will be executed to provision it.")
+	configFile, err := loginClient(namespace)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	defer removeFile(configFile)
+
+	inventoryFile, err := generateInventory(instance, namespace, "provision")
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	defer removeFile(inventoryFile)
+
+	err = runPlaybook(inventoryFile, configFile)
+	// TODO: consider setting owner reference
+	return reconcile.Result{}, err
+}
+
 func loginClient(namespace string) (string, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -209,7 +212,7 @@ func loginClient(namespace string) (string, error) {
 	return configFile, nil
 }
 
-func generateInventory(instance *kubevirtv1alpha1.AppService, request reconcile.Request, action string) (string, error) {
+func generateInventory(instance *kubevirtv1alpha1.AppService, namespace string, action string) (string, error) {
 	log.Info("Writing inventory file")
 	inventoryFile := fmt.Sprintf(InventoryFilePattern, "xyz") // TODO: unique random
 	f, err := os.Create(inventoryFile)
@@ -226,7 +229,7 @@ func generateInventory(instance *kubevirtv1alpha1.AppService, request reconcile.
 	f.WriteString(strings.Join([]string{"registry_url=", def(instance.Spec.RegistryUrl, "quay.io"), "\n"}, ""))
 	f.WriteString(strings.Join([]string{"registry_namespace=", def(instance.Spec.RegistryNamespace, "kubevirt"), "\n"}, ""))
 	f.WriteString(strings.Join([]string{"docker_tag=", def(instance.Spec.Version, "v1.4"), "\n"}, ""))
-	f.WriteString(strings.Join([]string{"kubevirt_web_ui_namespace=", def(request.Namespace, "kubevirt-web-ui"), "\n"}, ""))
+	f.WriteString(strings.Join([]string{"kubevirt_web_ui_namespace=", def(namespace, "kubevirt-web-ui"), "\n"}, ""))
 	f.WriteString("\n")
 	f.WriteString("[masters]\n")
 	_, err = f.WriteString("127.0.0.1 ansible_connection=local\n")
