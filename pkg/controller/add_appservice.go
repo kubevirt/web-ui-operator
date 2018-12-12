@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"kubevirt.io/kubevirt-web-ui-operator/pkg/controller/appservice"
+	"kubevirt.io/web-ui-operator/pkg/controller/appservice"
 )
 
 func init() {
