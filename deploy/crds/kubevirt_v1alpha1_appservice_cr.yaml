@@ -3,6 +3,6 @@ kind: AppService
 metadata:
   name: kubevirt-web-ui
 spec:
-  version: "v1.4"
+  version: "1.4"
   registry_url: "quay.io"
   registry_namespace: "kubevirt"

@@ -9,7 +9,7 @@ import (
 
 // AppServiceSpec defines the desired state of AppService
 type AppServiceSpec struct {
-	Version  string `json:"version,omitempty"`	// the desired kubevirt-web-ui version to be installed, conforms the docker tag. Example: v1.4.0-4
+	Version  string `json:"version,omitempty"`	// the desired kubevirt-web-ui version to be installed, conforms the docker tag. Example: 1.4.0-4
 
 	RegistryUrl string `json:"registry_url,omitempty"`	// the registry for docker image (ie.: quay.io)
 	RegistryNamespace string `json:"registry_namespace,omitempty"` // i.e. "kubevirt"
