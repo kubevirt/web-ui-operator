@@ -91,6 +91,7 @@ type ReconcileAppService struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	// TODO: in case of error wait before reconciling again
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling AppService")
 
@@ -121,10 +122,7 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	// ReplicaSet found
-	// TODO: check installed version and optionally deprovision-provision
-	// It should be enough to just re-execute the provision process and restart kubevirt-web-ui pod to read the updated ConfigMap. But deprovision is safe to address potential incompatible changes.
-
-	return reconcile.Result{}, nil
+	return reconcileExistingDeployment(request.Namespace, instance, replicaSet)
 
 	/*
 		// Define a new Pod object
@@ -158,6 +156,11 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 }
 
 func freshProvision(namespace string, instance *kubevirtv1alpha1.AppService) (reconcile.Result, error) {
+	if instance.Spec.Version == "" {
+		log.Info("Removal of kubevirt-web-ui deploymnet is requested but no kubevirt-web-ui deployment found. ")
+		return reconcile.Result{}, nil
+	}
+
 	// Kubevirt-web-ui deployment is not present yet
 	log.Info("kubevirt-web-ui ReplicaSet is not present. Ansible playbook will be executed to provision it.")
 	configFile, err := loginClient(namespace)
@@ -175,6 +178,17 @@ func freshProvision(namespace string, instance *kubevirtv1alpha1.AppService) (re
 	err = runPlaybook(inventoryFile, configFile)
 	// TODO: consider setting owner reference
 	return reconcile.Result{}, err
+}
+
+func reconcileExistingDeployment(namespace string, instance *kubevirtv1alpha1.AppService, replicaSet *corev1.ReplicationController) (reconcile.Result, error) {
+	// It should be enough to just re-execute the provision process and restart kubevirt-web-ui pod to read the updated ConfigMap.
+	// But deprovision is safer to address potential incompatible changes in the future.
+
+	// TODO: check installed version and optionally deprovision-provision
+	if instance.Spec.Version == "" {
+	}
+
+	return reconcile.Result{}, nil
 }
 
 func loginClient(namespace string) (string, error) {
@@ -281,10 +295,14 @@ func def(s string, defVal string) string {
 }
 
 func removeFile(name string) {
+	// TODO: re-enable
+	log.Info(fmt.Sprintf("Skiping removal of file for debug reasons: %s", name))
+	/*
 	err := os.Remove(name)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Failed to remove file: %s", name))
 	}
+	*/
 }
 
 /*
