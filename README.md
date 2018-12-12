@@ -26,6 +26,7 @@ oc new-project kubevirt-web-ui
 
 ```angular2
 oc apply -f deploy/service_account.yaml
+oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator
 oc apply -f deploy/role.yaml
 oc apply -f deploy/role_binding.yaml
 oc apply -f deploy/crds/kubevirt_v1alpha1_appservice_crd.yaml
