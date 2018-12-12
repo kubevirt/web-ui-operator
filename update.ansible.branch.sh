@@ -32,5 +32,5 @@ popd
 git rm -rf build/kubevirt-web-ui-ansible || true
 mv $TMP/kubevirt-web-ui-ansible build/
 git add build/kubevirt-web-ui-ansible
-git commit -m "Bump kubevirt-web-ui-ansible to v${RELEASE}"
+git commit -m "Bump kubevirt-web-ui-ansible to ${BRANCH} branch"
 
