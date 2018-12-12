@@ -24,7 +24,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-const InventoryFile = "/tmp/inventory.ini"
+const InventoryFilePattern = "/tmp/inventory_%s.ini"
+const ConfigFilePattern = "/tmp/config_%s"
+const PlaybookFile = "/kubevirt-web-ui-ansible/playbooks/kubevirt-web-ui/config.yml"
 var log = logf.Log.WithName("controller_appservice")
 
 /**
@@ -112,17 +114,21 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, replicaSet)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// TODO: add error handling of inner-steps
 			// Kubevirt-web-ui deployment is not present yet
 			reqLogger.Info("kubevirt-web-ui ReplicaSet is not present. Ansible playbook will be executed to provision it.")
-			loginClient(request)
-			generateInventory(instance, request, "provision")
-			provisionKubevirtWebUI()
-			// TODO: start ansible playbook to provision
-			// TODO: log ansible Log output
-			// TODO: return based on exit code
+			configFile, err := loginClient(request.Namespace)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+
+			inventoryFile, err := generateInventory(instance, request, "provision")
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+
+			err = runPlaybook(inventoryFile, configFile)
 			// TODO: consider setting owner reference
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, err
 		}
 		reqLogger.Info("kubevirt-web-ui ReplicaSet failed to be retrieved. Re-trying in a moment.", "error", err)
 		// Error reading the object - requeue the request.
@@ -166,13 +172,15 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	*/
 }
 
-func loginClient(request reconcile.Request) {
+func loginClient(namespace string) (string, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Failed to get in-cluster config"))
+		return "", err
 	}
 
-	env := []string{"KUBECONFIG=/tmp/config"} // TODO: make the filename unique
+	configFile := fmt.Sprintf(ConfigFilePattern, "xyz") // TODO: make unique
+	env := []string{fmt.Sprintf("KUBECONFIG=%s", configFile)}
 
 	cmd, args := "oc", []string{
 		"login",
@@ -181,36 +189,34 @@ func loginClient(request reconcile.Request) {
 		fmt.Sprintf("--token=%s", config.BearerToken),
 	}
 
-	command := exec.Command(cmd, args...)
-	command.Env = append(os.Environ(), env...)
-	out, err := command.CombinedOutput()
+	anonymArgs := append([]string{}, args...)
+	err = runCommand(cmd, args, env, anonymArgs)
 	if err != nil {
-		args[3] = "--token=[SECRET]"
-		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(args," ")))
+		return "", err
 	}
-	logPerLine("Login output:", string(out[:]))
 
 	cmd, args = "oc", []string{
 		"project",
-		request.Namespace,
+		namespace,
 	}
-	command = exec.Command(cmd, args...)
-	command.Env = append(os.Environ(), env...)
-	out, err = command.CombinedOutput()
+	err = runCommand(cmd, args, env, args)
 	if err != nil {
-		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(args," ")))
+		return "", err
 	}
-	logPerLine("Change project output:", string(out[:]))
+
+	return configFile, nil
 }
 
-func generateInventory(instance *kubevirtv1alpha1.AppService, request reconcile.Request, action string) error {
+func generateInventory(instance *kubevirtv1alpha1.AppService, request reconcile.Request, action string) (string, error) {
 	log.Info("Writing inventory file")
-	f, err := os.Create(InventoryFile)
+	inventoryFile := fmt.Sprintf(InventoryFilePattern, "xyz") // TODO: unique random
+	f, err := os.Create(inventoryFile)
 	if err != nil {
 		log.Error(err, "Failed to write inventory file")
-		return err
+		return "", err
 	}
 	defer f.Close()
+
 	f.WriteString("[OSEv3:children]\nmasters\n\n")
 	f.WriteString("[OSEv3:vars]\n")
 	f.WriteString("platform=openshift\n")
@@ -222,35 +228,36 @@ func generateInventory(instance *kubevirtv1alpha1.AppService, request reconcile.
 	f.WriteString("\n")
 	f.WriteString("[masters]\n")
 	_, err = f.WriteString("127.0.0.1 ansible_connection=local\n")
+
 	if err != nil {
 		log.Error(err, "Failed to write into the inventory file")
-		return err
+		return "", err
 	}
 	f.Sync()
 	log.Info("The inventory file is written.")
-	return nil
+	return inventoryFile, nil
 }
 
-func provisionKubevirtWebUI() error {
-	// TODO: ansible-playbook -i /tmp/inventory.ini /kubevirt-web-ui-ansible/playbooks/kubevirt-web-ui/config.yml -vvv
-	// run ansible-playbook
-
-	// Just for test:
-	cmd, args := "oc", []string{
-		"get",
-		"pods",
+func runPlaybook(inventoryFile, configFile string) error {
+	cmd, args := "ansible-playbook", []string{
+		"-i",
+		inventoryFile,
+		PlaybookFile,
+		"-vvv",
 	}
-	env := []string{"KUBECONFIG=/tmp/config"}
+	env := []string{fmt.Sprintf("KUBECONFIG=%s", configFile)}
+	return runCommand(cmd, args, env, args)
+}
 
+func runCommand(cmd string, args []string, env []string, anonymArgs []string) error {
 	command := exec.Command(cmd, args...)
 	command.Env = append(os.Environ(), env...)
-	out, err := command.CombinedOutput()
+	out, err := command.CombinedOutput() // TODO: read in continuously
 	if err != nil {
-		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(args," ")))
+		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(anonymArgs," ")))
 		return err
 	}
-	logPerLine("Test output:", string(out[:]))
-
+	logPerLine("output:", string(out[:]))
 	return nil
 }
 
