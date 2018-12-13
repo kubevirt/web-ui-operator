@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 	stderrors "errors"
+	"crypto/rand"
 
     extenstionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/rest"
@@ -233,7 +234,7 @@ func loginClient(namespace string) (string, error) {
 		return "", err
 	}
 
-	configFile := fmt.Sprintf(ConfigFilePattern, "xyz") // TODO: make unique
+	configFile := fmt.Sprintf(ConfigFilePattern, unique())
 	env := []string{fmt.Sprintf("KUBECONFIG=%s", configFile)}
 
 	cmd, args := "oc", []string{
@@ -263,7 +264,7 @@ func loginClient(namespace string) (string, error) {
 
 func generateInventory(instance *kubevirtv1alpha1.KWebUI, namespace string, action string) (string, error) {
 	log.Info("Writing inventory file")
-	inventoryFile := fmt.Sprintf(InventoryFilePattern, "xyz") // TODO: unique random
+	inventoryFile := fmt.Sprintf(InventoryFilePattern, unique())
 	f, err := os.Create(inventoryFile)
 	if err != nil {
 		log.Error(err, "Failed to write inventory file")
@@ -364,4 +365,12 @@ func updateStatus(r *ReconcileKWebUI, instance *kubevirtv1alpha1.KWebUI, phase s
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Failed to update KWebUI status. Intended to write phase: '%s', message: %s", phase, msg))
 	}
+}
+
+func unique() string {
+	b := make([]byte, 5)
+	if _, err := rand.Read(b); err != nil {
+		return "abcde"
+	}
+	return fmt.Sprintf("%X", b)
 }
