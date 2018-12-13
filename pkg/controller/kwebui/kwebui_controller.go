@@ -8,7 +8,7 @@ import (
 	"strings"
 	stderrors "errors"
 
-//	corev1 "k8s.io/api/core/v1"
+	//	corev1 "k8s.io/api/core/v1"
     extenstionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -33,7 +33,6 @@ const WebUIContainerName = "console"
 
 var log = logf.Log.WithName("controller_kwebui")
 
-// TODO: Rename KWebUI to KubevirtWebUI
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*
@@ -96,7 +95,10 @@ type ReconcileKWebUI struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileKWebUI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	// TODO: in case of error wait before reconciling again
+	// TODO: in case of error wait before reconciling again, see
+	// following does not work: return reconcile.Result{RequeueAfter: RequeueDelay}, err
+	// for reason, see: vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go
+
 	// TODO: populate KWebUI status messages
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling KWebUI")
