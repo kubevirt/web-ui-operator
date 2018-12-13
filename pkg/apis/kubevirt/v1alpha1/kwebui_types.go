@@ -20,6 +20,8 @@ type KWebUISpec struct {
 
 // KWebUIStatus defines the observed state of KWebUI
 type KWebUIStatus struct {
+	Phase string `json:"phase,omitempty"` // one of the Phase* constants
+	Message string `json:"message,omitempty"` // extra human-readable message
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 }
