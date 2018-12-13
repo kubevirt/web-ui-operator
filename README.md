@@ -1,3 +1,7 @@
+Please note, this project is currently in early development phase.
+
+---
+
 # Kubevirt Web UI Operator
 The kubernetes [operator](https://github.com/operator-framework) for managing [Kubevirt Web UI](https://github.com/kubevirt/web-ui).
 Leverages the [operator-sdk](https://github.com/operator-framework/operator-sdk/).
