@@ -8,17 +8,14 @@ import (
 	"strings"
 	stderrors "errors"
 
-	//	corev1 "k8s.io/api/core/v1"
     extenstionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/apimachinery/pkg/api/errors"
-//	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	kubevirtv1alpha1 "kubevirt.io/web-ui-operator/pkg/apis/kubevirt/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-//	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -41,11 +38,6 @@ const PhaseOtherError = "OTHER_ERROR"
 const PhaseNoDeployment = "NOT_DEPLOYED"
 
 var log = logf.Log.WithName("controller_kwebui")
-
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
 
 // Add creates a new KWebUI Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -98,8 +90,6 @@ type ReconcileKWebUI struct {
 
 // Reconcile reads that state of the cluster for a KWebUI object and makes changes based on the state read
 // and what is in the KWebUI.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
@@ -139,50 +129,8 @@ func (r *ReconcileKWebUI) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	/*
-		// Fetch the kubevirt-web-ui ReplicaSet
-		replicaSet := &corev1.ReplicationController{}
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, replicaSet) // TODO: wrong name
-		if err != nil {
-			if errors.IsNotFound(err) {
-				return freshProvision(request.Namespace, instance)
-			}
-			reqLogger.Info("kubevirt-web-ui ReplicaSet failed to be retrieved. Re-trying in a moment.", "error", err)
-			return reconcile.Result{}, err
-		}
-	*/
 	// Deployment found
 	return reconcileExistingDeployment(r, request.Namespace, instance, deployment)
-
-	/*
-		// Define a new Pod object
-		pod := newPodForCR(instance)
-
-		// Set KWebUI instance as the owner and controller
-		if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// Check if this Pod already exists
-		found := &corev1.Pod{}
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-		if err != nil && errors.IsNotFound(err) {
-			reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-			err = r.client.Create(context.TODO(), pod)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-
-			// Pod created successfully - don't requeue
-			return reconcile.Result{}, nil
-		} else if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// Pod already exists - don't requeue
-		reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
-		return reconcile.Result{}, nil
-	*/
 }
 
 func runPlaybookWithSetup(namespace string, instance *kubevirtv1alpha1.KWebUI, action string) (reconcile.Result, error) {
@@ -417,28 +365,3 @@ func updateStatus(r *ReconcileKWebUI, instance *kubevirtv1alpha1.KWebUI, phase s
 		log.Error(err, fmt.Sprintf("Failed to update KWebUI status. Intended to write phase: '%s', message: %s", phase, msg))
 	}
 }
-
-/*
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *kubevirtv1alpha1.KWebUI) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
-	}
-}
-*/
