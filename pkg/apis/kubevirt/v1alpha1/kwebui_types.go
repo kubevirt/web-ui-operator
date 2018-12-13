@@ -7,8 +7,8 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// AppServiceSpec defines the desired state of AppService
-type AppServiceSpec struct {
+// KWebUISpec defines the desired state of KWebUI
+type KWebUISpec struct {
 	Version  string `json:"version,omitempty"`	// the desired kubevirt-web-ui version to be installed, conforms the docker tag. Example: 1.4.0-4
 
 	RegistryUrl string `json:"registry_url,omitempty"`	// the registry for docker image (ie.: quay.io)
@@ -18,33 +18,33 @@ type AppServiceSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 }
 
-// AppServiceStatus defines the observed state of AppService
-type AppServiceStatus struct {
+// KWebUIStatus defines the observed state of KWebUI
+type KWebUIStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// AppService is the Schema for the appservices API
+// KWebUI is the Schema for the kwebuis API
 // +k8s:openapi-gen=true
-type AppService struct {
+type KWebUI struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AppServiceSpec   `json:"spec,omitempty"`
-	Status AppServiceStatus `json:"status,omitempty"`
+	Spec   KWebUISpec   `json:"spec,omitempty"`
+	Status KWebUIStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// AppServiceList contains a list of AppService
-type AppServiceList struct {
+// KWebUIList contains a list of KWebUI
+type KWebUIList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AppService `json:"items"`
+	Items           []KWebUI `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&AppService{}, &AppServiceList{})
+	SchemeBuilder.Register(&KWebUI{}, &KWebUIList{})
 }
