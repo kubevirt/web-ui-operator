@@ -1,0 +1,11 @@
+---
+- name: Remove kubevirt-web-ui deployment but keep the project
+  shell: >
+    "{{ openshift_client_binary }}" delete deployment console -n "{{ kubevirt_web_ui_namespace }}" ;
+    "{{ openshift_client_binary }}" delete route console -n "{{ kubevirt_web_ui_namespace }}" ;
+    "{{ openshift_client_binary }}" delete service console -n "{{ kubevirt_web_ui_namespace }}" ;
+    "{{ openshift_client_binary }}" delete configmap console-config -n "{{ kubevirt_web_ui_namespace }}" ;
+    "{{ openshift_client_binary }}" delete secret console-oauth-config -n "{{ kubevirt_web_ui_namespace }}" ;
+    "{{ openshift_client_binary }}" delete serviceaccount console -n "{{ kubevirt_web_ui_namespace }}"
+  ignore_errors: yes
+  when: preserve_namespace is defined and (preserve_namespace | default(false) | bool)

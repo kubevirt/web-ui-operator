@@ -6,8 +6,10 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	stderrors "errors"
 
-	corev1 "k8s.io/api/core/v1"
+//	corev1 "k8s.io/api/core/v1"
+    extenstionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/apimachinery/pkg/api/errors"
 //	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,8 +29,11 @@ import (
 const InventoryFilePattern = "/tmp/inventory_%s.ini"
 const ConfigFilePattern = "/tmp/config_%s"
 const PlaybookFile = "/kubevirt-web-ui-ansible/playbooks/kubevirt-web-ui/config.yml"
+const WebUIContainerName = "console"
+
 var log = logf.Log.WithName("controller_appservice")
 
+// TODO: Rename AppService to KubevirtWebUI
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*
@@ -92,6 +97,7 @@ type ReconcileAppService struct {
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// TODO: in case of error wait before reconciling again
+	// TODO: populate AppService status messages
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling AppService")
 
@@ -103,26 +109,39 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			// TODO: use finalizer if the AppService CR is deleted
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	reqLogger.Info("Desired kubevirt-web-ui version", "instance.Spec.Version", instance.Spec.Version)
+	reqLogger.Info("Desired kubevirt-web-ui version: ", "instance.Spec.Version", instance.Spec.Version)
 
-	// Fetch the kubevirt-web-ui ReplicaSet
-	replicaSet := &corev1.ReplicationController{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, replicaSet)
+	// Fetch the kubevirt-web-ui Deployment
+	deployment := &extenstionsv1beta1.Deployment{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, deployment)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return freshProvision(request.Namespace, instance)
 		}
-		reqLogger.Info("kubevirt-web-ui ReplicaSet failed to be retrieved. Re-trying in a moment.", "error", err)
+		reqLogger.Info("kubevirt-web-ui Deployment failed to be retrieved. Re-trying in a moment.", "error", err)
 		return reconcile.Result{}, err
 	}
 
-	// ReplicaSet found
-	return reconcileExistingDeployment(request.Namespace, instance, replicaSet)
+	/*
+		// Fetch the kubevirt-web-ui ReplicaSet
+		replicaSet := &corev1.ReplicationController{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, replicaSet) // TODO: wrong name
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return freshProvision(request.Namespace, instance)
+			}
+			reqLogger.Info("kubevirt-web-ui ReplicaSet failed to be retrieved. Re-trying in a moment.", "error", err)
+			return reconcile.Result{}, err
+		}
+	*/
+	// Deployment found
+	return reconcileExistingDeployment(request.Namespace, instance, deployment)
 
 	/*
 		// Define a new Pod object
@@ -155,6 +174,23 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	*/
 }
 
+func runPlaybookWithSetup(namespace string, instance *kubevirtv1alpha1.AppService, action string) (reconcile.Result, error) {
+	configFile, err := loginClient(namespace)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	defer removeFile(configFile)
+
+	inventoryFile, err := generateInventory(instance, namespace, action)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	defer removeFile(inventoryFile)
+
+	err = runPlaybook(inventoryFile, configFile)
+	return reconcile.Result{}, err
+}
+
 func freshProvision(namespace string, instance *kubevirtv1alpha1.AppService) (reconcile.Result, error) {
 	if instance.Spec.Version == "" {
 		log.Info("Removal of kubevirt-web-ui deploymnet is requested but no kubevirt-web-ui deployment found. ")
@@ -162,33 +198,54 @@ func freshProvision(namespace string, instance *kubevirtv1alpha1.AppService) (re
 	}
 
 	// Kubevirt-web-ui deployment is not present yet
-	log.Info("kubevirt-web-ui ReplicaSet is not present. Ansible playbook will be executed to provision it.")
-	configFile, err := loginClient(namespace)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	defer removeFile(configFile)
-
-	inventoryFile, err := generateInventory(instance, namespace, "provision")
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	defer removeFile(inventoryFile)
-
-	err = runPlaybook(inventoryFile, configFile)
+	log.Info("kubevirt-web-ui Deployment is not present. Ansible playbook will be executed to provision it.")
 	// TODO: consider setting owner reference
-	return reconcile.Result{}, err
+	return runPlaybookWithSetup(namespace, instance, "provision")
 }
 
-func reconcileExistingDeployment(namespace string, instance *kubevirtv1alpha1.AppService, replicaSet *corev1.ReplicationController) (reconcile.Result, error) {
-	// It should be enough to just re-execute the provision process and restart kubevirt-web-ui pod to read the updated ConfigMap.
-	// But deprovision is safer to address potential incompatible changes in the future.
+func deprovision(namespace string, instance *kubevirtv1alpha1.AppService) (reconcile.Result, error) {
+	log.Info("Existing kubevirt-web-ui deployment is about to be deprovisioned.")
+	return runPlaybookWithSetup(namespace, instance, "deprovision")
+}
 
-	// TODO: check installed version and optionally deprovision-provision
-	if instance.Spec.Version == "" {
+func reconcileExistingDeployment(namespace string, instance *kubevirtv1alpha1.AppService, deployment *extenstionsv1beta1.Deployment) (reconcile.Result, error) {
+	existingVersion := ""
+	for _, container := range deployment.Spec.Template.Spec.Containers {
+		if container.Name == WebUIContainerName {
+			// quay.io/kubevirt/kubevirt-web-ui:v1.4
+			existingVersion = afterLast(container.Image, ":")
+			log.Info(fmt.Sprintf("Existing image tag: %s, from image: %s", existingVersion, container.Image))
+			if existingVersion == "" {
+				log.Info("Failed to read existing image tag")
+				return reconcile.Result{}, stderrors.New("failed to read existing image tag")
+			}
+			break
+		}
+	}
+	if existingVersion == "" {
+		log.Info("Can not read deployed container version, giving up.")
+		return reconcile.Result{}, nil
 	}
 
-	return reconcile.Result{}, nil
+	if instance.Spec.Version == existingVersion {
+		log.Info(fmt.Sprintf("Existing version conform the requested one: %s. Nothing to do.", existingVersion))
+		return reconcile.Result{}, nil
+	}
+
+	if instance.Spec.Version == "" { // deprovision only
+		return deprovision(namespace, instance)
+	}
+
+	// requested and deployed version are different
+	// It should be enough to just re-execute the provision process and restart kubevirt-web-ui pod to read the updated ConfigMap.
+	// But deprovision is safer to address potential incompatible changes in the future.
+	_ , err := deprovision(namespace, instance)
+	if err != nil {
+		log.Error(err, "Failed to deprovision existing deployment. Can not continue with provision of the requested one.")
+		return reconcile.Result{}, err
+	}
+
+	return freshProvision(namespace, instance)
 }
 
 func loginClient(namespace string) (string, error) {
@@ -236,6 +293,7 @@ func generateInventory(instance *kubevirtv1alpha1.AppService, namespace string, 
 	}
 	defer f.Close()
 
+	// TODO: provide parameters if openshift-console project is not present
 	f.WriteString("[OSEv3:children]\nmasters\n\n")
 	f.WriteString("[OSEv3:vars]\n")
 	f.WriteString("platform=openshift\n")
@@ -244,6 +302,9 @@ func generateInventory(instance *kubevirtv1alpha1.AppService, namespace string, 
 	f.WriteString(strings.Join([]string{"registry_namespace=", def(instance.Spec.RegistryNamespace, "kubevirt"), "\n"}, ""))
 	f.WriteString(strings.Join([]string{"docker_tag=", def(instance.Spec.Version, "v1.4"), "\n"}, ""))
 	f.WriteString(strings.Join([]string{"kubevirt_web_ui_namespace=", def(namespace, "kubevirt-web-ui"), "\n"}, ""))
+	if action == "deprovision" {
+		f.WriteString("preserve_namespace=true\n")
+	}
 	f.WriteString("\n")
 	f.WriteString("[masters]\n")
 	_, err = f.WriteString("127.0.0.1 ansible_connection=local\n")
@@ -303,6 +364,18 @@ func removeFile(name string) {
 		log.Error(err, fmt.Sprintf("Failed to remove file: %s", name))
 	}
 	*/
+}
+
+func afterLast(value string, a string) string {
+	pos := strings.LastIndex(value, a)
+	if pos == -1 {
+		return ""
+	}
+	adjustedPos := pos + len(a)
+	if adjustedPos >= len(value) {
+		return ""
+	}
+	return value[adjustedPos:]
 }
 
 /*
