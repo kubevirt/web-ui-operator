@@ -33,15 +33,16 @@ oc apply -f deploy/service_account.yaml
 oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator
 oc apply -f deploy/role.yaml
 oc apply -f deploy/role_binding.yaml
-oc apply -f deploy/crds/kubevirt_v1alpha1_appservice_crd.yaml
+oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_crd.yaml
 oc apply -f deploy/operator.yaml 
 ```
 
 ```angular2
-oc apply -f deploy/crds/kubevirt_v1alpha1_appservice_cr.yaml
+oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_cr.yaml
 ```
 
 TBD: generic URL of yaml files
+
 TBD: change version
 
 ## Authors

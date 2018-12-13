@@ -1,4 +1,4 @@
-package appservice
+package kwebui
 
 import (
 	"context"
@@ -31,15 +31,15 @@ const ConfigFilePattern = "/tmp/config_%s"
 const PlaybookFile = "/kubevirt-web-ui-ansible/playbooks/kubevirt-web-ui/config.yml"
 const WebUIContainerName = "console"
 
-var log = logf.Log.WithName("controller_appservice")
+var log = logf.Log.WithName("controller_kwebui")
 
-// TODO: Rename AppService to KubevirtWebUI
+// TODO: Rename KWebUI to KubevirtWebUI
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*
  */
 
-// Add creates a new AppService Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new KWebUI Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -47,29 +47,29 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileAppService{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileKWebUI{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("appservice-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("kwebui-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource AppService
-	err = c.Watch(&source.Kind{Type: &kubevirtv1alpha1.AppService{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource KWebUI
+	err = c.Watch(&source.Kind{Type: &kubevirtv1alpha1.KWebUI{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
 /*
 	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner AppService
+	// Watch for changes to secondary resource Pods and requeue the owner KWebUI
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &kubevirtv1alpha1.AppService{},
+		OwnerType:    &kubevirtv1alpha1.KWebUI{},
 	})
 	if err != nil {
 		return err
@@ -78,38 +78,38 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-var _ reconcile.Reconciler = &ReconcileAppService{}
+var _ reconcile.Reconciler = &ReconcileKWebUI{}
 
-// ReconcileAppService reconciles a AppService object
-type ReconcileAppService struct {
+// ReconcileKWebUI reconciles a KWebUI object
+type ReconcileKWebUI struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a AppService object and makes changes based on the state read
-// and what is in the AppService.Spec
+// Reconcile reads that state of the cluster for a KWebUI object and makes changes based on the state read
+// and what is in the KWebUI.Spec
 // TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
 // a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileKWebUI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// TODO: in case of error wait before reconciling again
-	// TODO: populate AppService status messages
+	// TODO: populate KWebUI status messages
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling AppService")
+	reqLogger.Info("Reconciling KWebUI")
 
-	// Fetch the AppService instance
-	instance := &kubevirtv1alpha1.AppService{}
+	// Fetch the KWebUI instance
+	instance := &kubevirtv1alpha1.KWebUI{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			// TODO: use finalizer if the AppService CR is deleted
+			// TODO: use finalizer if the KWebUI CR is deleted
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
@@ -147,7 +147,7 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 		// Define a new Pod object
 		pod := newPodForCR(instance)
 
-		// Set AppService instance as the owner and controller
+		// Set KWebUI instance as the owner and controller
 		if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
 			return reconcile.Result{}, err
 		}
@@ -174,7 +174,7 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 	*/
 }
 
-func runPlaybookWithSetup(namespace string, instance *kubevirtv1alpha1.AppService, action string) (reconcile.Result, error) {
+func runPlaybookWithSetup(namespace string, instance *kubevirtv1alpha1.KWebUI, action string) (reconcile.Result, error) {
 	configFile, err := loginClient(namespace)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -191,7 +191,7 @@ func runPlaybookWithSetup(namespace string, instance *kubevirtv1alpha1.AppServic
 	return reconcile.Result{}, err
 }
 
-func freshProvision(namespace string, instance *kubevirtv1alpha1.AppService) (reconcile.Result, error) {
+func freshProvision(namespace string, instance *kubevirtv1alpha1.KWebUI) (reconcile.Result, error) {
 	if instance.Spec.Version == "" {
 		log.Info("Removal of kubevirt-web-ui deploymnet is requested but no kubevirt-web-ui deployment found. ")
 		return reconcile.Result{}, nil
@@ -203,12 +203,12 @@ func freshProvision(namespace string, instance *kubevirtv1alpha1.AppService) (re
 	return runPlaybookWithSetup(namespace, instance, "provision")
 }
 
-func deprovision(namespace string, instance *kubevirtv1alpha1.AppService) (reconcile.Result, error) {
+func deprovision(namespace string, instance *kubevirtv1alpha1.KWebUI) (reconcile.Result, error) {
 	log.Info("Existing kubevirt-web-ui deployment is about to be deprovisioned.")
 	return runPlaybookWithSetup(namespace, instance, "deprovision")
 }
 
-func reconcileExistingDeployment(namespace string, instance *kubevirtv1alpha1.AppService, deployment *extenstionsv1beta1.Deployment) (reconcile.Result, error) {
+func reconcileExistingDeployment(namespace string, instance *kubevirtv1alpha1.KWebUI, deployment *extenstionsv1beta1.Deployment) (reconcile.Result, error) {
 	existingVersion := ""
 	for _, container := range deployment.Spec.Template.Spec.Containers {
 		if container.Name == WebUIContainerName {
@@ -283,7 +283,7 @@ func loginClient(namespace string) (string, error) {
 	return configFile, nil
 }
 
-func generateInventory(instance *kubevirtv1alpha1.AppService, namespace string, action string) (string, error) {
+func generateInventory(instance *kubevirtv1alpha1.KWebUI, namespace string, action string) (string, error) {
 	log.Info("Writing inventory file")
 	inventoryFile := fmt.Sprintf(InventoryFilePattern, "xyz") // TODO: unique random
 	f, err := os.Create(inventoryFile)
@@ -380,7 +380,7 @@ func afterLast(value string, a string) string {
 
 /*
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *kubevirtv1alpha1.AppService) *corev1.Pod {
+func newPodForCR(cr *kubevirtv1alpha1.KWebUI) *corev1.Pod {
 	labels := map[string]string{
 		"app": cr.Name,
 	}

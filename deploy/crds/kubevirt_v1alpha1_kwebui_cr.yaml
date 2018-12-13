@@ -1,5 +1,5 @@
 apiVersion: kubevirt.io/v1alpha1
-kind: AppService
+kind: KWebUI
 metadata:
   name: kubevirt-web-ui
 spec:
