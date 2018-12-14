@@ -3,6 +3,7 @@ package kwebui
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -335,22 +336,46 @@ func runPlaybook(inventoryFile, configFile string) error {
 	return runCommand(cmd, args, env, args)
 }
 
+func pipeToLog(pipe io.ReadCloser, name string) {
+	buf := make([]byte, 1024, 1024)
+	for {
+		n, err := pipe.Read(buf[:])
+		if n > 0 {
+			logPerLine(name, string(buf[:n]))
+		}
+		if err != nil {
+			if err != io.EOF {
+				log.Error(err,  fmt.Sprintf("%s read error", name))
+			}
+			return
+		}
+	}
+}
+
 func runCommand(cmd string, args []string, env []string, anonymArgs []string) error {
 	command := exec.Command(cmd, args...)
 	command.Env = append(os.Environ(), env...)
-	out, err := command.CombinedOutput() // TODO: read in continuously
+	stdoutIn,_ := command.StdoutPipe()
+	stderrIn,_ := command.StderrPipe()
+
+	err := command.Start()
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Execution failed: %s %s", cmd, strings.Join(anonymArgs," ")))
 		return err
 	}
-	logPerLine("output:", string(out[:]))
+	go pipeToLog(stdoutIn, "stdout")
+	go pipeToLog(stderrIn, "stdout")
+	err = command.Wait()
+	if err != nil {
+		log.Error(err, fmt.Sprintf("Execution failed (wait): %s %s", cmd, strings.Join(anonymArgs," ")))
+		return err
+	}
 	return nil
 }
 
 func logPerLine(header string, out string) {
-	log.Info(header)
 	for _,line := range strings.Split(out, "\n") {
-		log.Info(line)
+		log.Info(fmt.Sprintf("%s: %s", header, line))
 	}
 }
 
