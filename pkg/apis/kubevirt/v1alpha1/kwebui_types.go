@@ -14,6 +14,9 @@ type KWebUISpec struct {
 	RegistryUrl string `json:"registry_url,omitempty"`	// the registry for docker image (ie.: quay.io)
 	RegistryNamespace string `json:"registry_namespace,omitempty"` // i.e. "kubevirt"
 
+	OpenshiftMasterDefaultSubdomain string `json:"openshift_master_default_subdomain,omitempty"` // optional - workaround if openshift-console is not deployed, otherwise auto-discovered from its ConfigMap
+	PublicMasterHostname string `json:"public_master_hostname,omitempty"` // optional - workaround if openshift-console is not deployed, otherwise auto-discovered from its ConfigMap
+
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 }
