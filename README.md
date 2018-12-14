@@ -67,6 +67,16 @@ Actual [Kubevirt Web UI](https://github.com/kubevirt/web-ui) deployment is manag
 oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_cr.yaml
 ```
 
+### Status
+Processing status can be observed within the `KWebUI` custom resource's `status` section:
+- `status.phase` - contains one of the string constants for automatization
+- `status.message` - human readable details
+
+In case of errors, watch operator's pod logs, sort of:
+```angular2
+oc logs kubevirt-web-ui-operator-85ffcdd9d5-8lt9g
+```
+
 ## How to Build
 See [operator-sdk](https://github.com/operator-framework/operator-sdk/) for the tooling installation instructions.
 
