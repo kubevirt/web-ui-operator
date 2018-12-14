@@ -20,6 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -37,6 +38,7 @@ const PhaseDeprovisioned = "DEPROVISIONED"
 const PhaseDeprovisionFailed = "DEPROVISION_FAILED"
 const PhaseOtherError = "OTHER_ERROR"
 const PhaseNoDeployment = "NOT_DEPLOYED"
+const PhaseOwnerReferenceFailed = "OWNER_REFERENCE_FAILED"
 
 var log = logf.Log.WithName("controller_kwebui")
 
@@ -65,17 +67,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-/*
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
 	// Watch for changes to secondary resource Pods and requeue the owner KWebUI
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &extenstionsv1beta1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &kubevirtv1alpha1.KWebUI{},
 	})
 	if err != nil {
 		return err
 	}
-*/
+
 	return nil
 }
 
@@ -123,15 +123,15 @@ func (r *ReconcileKWebUI) Reconcile(request reconcile.Request) (reconcile.Result
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, deployment)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return freshProvision(r, request.Namespace, instance)
+			return freshProvision(r, request, instance)
 		}
 		reqLogger.Info("kubevirt-web-ui Deployment failed to be retrieved. Re-trying in a moment.", "error", err)
-		updateStatus(r, instance, PhaseOtherError, "Failed to retrieve kubevirt-web-ui Deployment object.")
+		updateStatus(r, request, PhaseOtherError, "Failed to retrieve kubevirt-web-ui Deployment object.")
 		return reconcile.Result{}, err
 	}
 
 	// Deployment found
-	return reconcileExistingDeployment(r, request.Namespace, instance, deployment)
+	return reconcileExistingDeployment(r, request, instance, deployment)
 }
 
 func runPlaybookWithSetup(namespace string, instance *kubevirtv1alpha1.KWebUI, action string) (reconcile.Result, error) {
@@ -151,46 +151,47 @@ func runPlaybookWithSetup(namespace string, instance *kubevirtv1alpha1.KWebUI, a
 	return reconcile.Result{}, err
 }
 
-func freshProvision(r *ReconcileKWebUI, namespace string, instance *kubevirtv1alpha1.KWebUI) (reconcile.Result, error) {
+func freshProvision(r *ReconcileKWebUI, request reconcile.Request, instance *kubevirtv1alpha1.KWebUI) (reconcile.Result, error) {
 	if instance.Spec.Version == "" {
 		log.Info("Removal of kubevirt-web-ui deploymnet is requested but no kubevirt-web-ui deployment found. ")
-		updateStatus(r, instance, PhaseNoDeployment, "")
+		updateStatus(r, request, PhaseNoDeployment, "")
 		return reconcile.Result{}, nil
 	}
 
 	// Kubevirt-web-ui deployment is not present yet
 	log.Info("kubevirt-web-ui Deployment is not present. Ansible playbook will be executed to provision it.")
-	updateStatus(r, instance, PhaseFreshProvision, fmt.Sprintf("Target version: %s", instance.Spec.Version))
-	res, err := runPlaybookWithSetup(namespace, instance, "provision")
+	updateStatus(r, request, PhaseFreshProvision, fmt.Sprintf("Target version: %s", instance.Spec.Version))
+	res, err := runPlaybookWithSetup(request.Namespace, instance, "provision")
 	if err == nil {
-		// TODO: consider setting owner reference
-		updateStatus(r, instance, PhaseProvisioned, "Provision finished.")
+		setOwnerReference(r, request, instance)
+		updateStatus(r, request, PhaseProvisioned, "Provision finished.")
 	} else {
-		updateStatus(r, instance, PhaseProvisionFailed, "Failed to provision Kubevirt Web UI. See operator's log for more details.")
+		updateStatus(r, request, PhaseProvisionFailed, "Failed to provision Kubevirt Web UI. See operator's log for more details.")
 	}
 	return res, err
 }
 
-func deprovision(r *ReconcileKWebUI, namespace string, instance *kubevirtv1alpha1.KWebUI) (reconcile.Result, error) {
+func deprovision(r *ReconcileKWebUI, request reconcile.Request, instance *kubevirtv1alpha1.KWebUI) (reconcile.Result, error) {
 	log.Info("Existing kubevirt-web-ui deployment is about to be deprovisioned.")
-	updateStatus(r, instance, PhaseDeprovision, "")
-	res, err := runPlaybookWithSetup(namespace, instance, "deprovision")
+	updateStatus(r, request, PhaseDeprovision, "")
+	res, err := runPlaybookWithSetup(request.Namespace, instance, "deprovision")
 	if err == nil {
-		updateStatus(r, instance, PhaseDeprovisioned, "Deprovision finished.")
+		updateStatus(r, request, PhaseDeprovisioned, "Deprovision finished.")
 	} else {
-		updateStatus(r, instance, PhaseDeprovisionFailed, "Failed to deprovision Kubevirt Web UI. See operator's log for more details.")
+		updateStatus(r, request, PhaseDeprovisionFailed, "Failed to deprovision Kubevirt Web UI. See operator's log for more details.")
 	}
 
 	return res, err
 }
 
-func reconcileExistingDeployment(r *ReconcileKWebUI, namespace string, instance *kubevirtv1alpha1.KWebUI, deployment *extenstionsv1beta1.Deployment) (reconcile.Result, error) {
+func reconcileExistingDeployment(r *ReconcileKWebUI, request reconcile.Request, instance *kubevirtv1alpha1.KWebUI, deployment *extenstionsv1beta1.Deployment) (reconcile.Result, error) {
 	existingVersion := ""
 	for _, container := range deployment.Spec.Template.Spec.Containers {
 		if container.Name == WebUIContainerName {
 			// quay.io/kubevirt/kubevirt-web-ui:v1.4
 			existingVersion = afterLast(container.Image, ":")
 			log.Info(fmt.Sprintf("Existing image tag: %s, from image: %s", existingVersion, container.Image))
+			existingVersion = strings.TrimPrefix(existingVersion, "v")
 			if existingVersion == "" {
 				log.Info("Failed to read existing image tag")
 				return reconcile.Result{}, stderrors.New("failed to read existing image tag")
@@ -200,31 +201,31 @@ func reconcileExistingDeployment(r *ReconcileKWebUI, namespace string, instance 
 	}
 	if existingVersion == "" {
 		log.Info("Can not read deployed container version, giving up.")
-		updateStatus(r, instance, PhaseOtherError, "Can not read deployed container version.")
+		updateStatus(r, request, PhaseOtherError, "Can not read deployed container version.")
 		return reconcile.Result{}, nil
 	}
 
 	if instance.Spec.Version == existingVersion {
 		msg := fmt.Sprintf("Existing version conform the requested one: %s. Nothing to do.", existingVersion)
 		log.Info(msg)
-		updateStatus(r, instance, PhaseProvisioned, msg)
+		updateStatus(r, request, PhaseProvisioned, msg)
 		return reconcile.Result{}, nil
 	}
 
 	if instance.Spec.Version == "" { // deprovision only
-		return deprovision(r, namespace, instance)
+		return deprovision(r, request, instance)
 	}
 
 	// requested and deployed version are different
 	// It should be enough to just re-execute the provision process and restart kubevirt-web-ui pod to read the updated ConfigMap.
 	// But deprovision is safer to address potential incompatible changes in the future.
-	_ , err := deprovision(r, namespace, instance)
+	_ , err := deprovision(r, request, instance)
 	if err != nil {
 		log.Error(err, "Failed to deprovision existing deployment. Can not continue with provision of the requested one.")
 		return reconcile.Result{}, err
 	}
 
-	return freshProvision(r, namespace, instance)
+	return freshProvision(r, request, instance)
 }
 
 func loginClient(namespace string) (string, error) {
@@ -297,6 +298,27 @@ func generateInventory(instance *kubevirtv1alpha1.KWebUI, namespace string, acti
 	return inventoryFile, nil
 }
 
+func setOwnerReference(r *ReconcileKWebUI, request reconcile.Request, instance *kubevirtv1alpha1.KWebUI) error {
+	deployment := &extenstionsv1beta1.Deployment{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: "console", Namespace: request.Namespace}, deployment)
+	if err != nil {
+		msg := "Failed to retrieve the just created kubevirt-web-ui Deployment object to set owner reference."
+		log.Error(err, msg)
+		updateStatus(r, request, PhaseOwnerReferenceFailed, msg)
+		return err
+	}
+
+	controllerutil.SetControllerReference(instance, deployment, r.scheme)
+	if err != nil {
+		msg := "Failed to set Operator CR as the owner of the kubevirt-web-ui Deployment object."
+		log.Error(err, msg)
+		updateStatus(r, request, PhaseOwnerReferenceFailed, msg)
+		return err
+	}
+
+	return nil
+}
+
 func runPlaybook(inventoryFile, configFile string) error {
 	cmd, args := "ansible-playbook", []string{
 		"-i",
@@ -357,11 +379,17 @@ func afterLast(value string, a string) string {
 	return value[adjustedPos:]
 }
 
-func updateStatus(r *ReconcileKWebUI, instance *kubevirtv1alpha1.KWebUI, phase string, msg string) {
+func updateStatus(r *ReconcileKWebUI, request reconcile.Request, phase string, msg string) {
+	instance := &kubevirtv1alpha1.KWebUI{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	if err != nil {
+		log.Error(err, fmt.Sprintf("Failed to get KWebUI object to update status info. Intended to write phase: '%s', message: %s", phase, msg))
+		return
+	}
+
 	instance.Status.Phase = phase
 	instance.Status.Message = msg
-
-	err := r.client.Update(context.TODO(), instance)
+	err = r.client.Update(context.TODO(), instance)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Failed to update KWebUI status. Intended to write phase: '%s', message: %s", phase, msg))
 	}
