@@ -200,6 +200,9 @@ func reconcileExistingDeployment(r *ReconcileKWebUI, request reconcile.Request, 
 			break
 		}
 	}
+
+	// TODO: reconcile based on other parameters, not only the Version
+
 	if existingVersion == "" {
 		log.Info("Can not read deployed container version, giving up.")
 		updateStatus(r, request, PhaseOtherError, "Can not read deployed container version.")
@@ -387,14 +390,10 @@ func def(s string, defVal string) string {
 }
 
 func removeFile(name string) {
-	// TODO: re-enable
-	log.Info(fmt.Sprintf("Skiping removal of file for debug reasons: %s", name))
-	/*
 	err := os.Remove(name)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Failed to remove file: %s", name))
 	}
-	*/
 }
 
 func afterLast(value string, a string) string {
