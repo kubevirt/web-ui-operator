@@ -45,5 +45,7 @@ TBD: generic URL of yaml files
 
 TBD: change version
 
+TBD: document optional public_master_hostname and openshift_master_default_subdomain
+
 ## Authors
 - Marek Libra

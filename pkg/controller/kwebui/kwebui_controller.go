@@ -273,7 +273,6 @@ func generateInventory(instance *kubevirtv1alpha1.KWebUI, namespace string, acti
 	}
 	defer f.Close()
 
-	// TODO: provide parameters if openshift-console project is not present
 	f.WriteString("[OSEv3:children]\nmasters\n\n")
 	f.WriteString("[OSEv3:vars]\n")
 	f.WriteString("platform=openshift\n")
@@ -284,6 +283,12 @@ func generateInventory(instance *kubevirtv1alpha1.KWebUI, namespace string, acti
 	f.WriteString(strings.Join([]string{"kubevirt_web_ui_namespace=", def(namespace, "kubevirt-web-ui"), "\n"}, ""))
 	if action == "deprovision" {
 		f.WriteString("preserve_namespace=true\n")
+	}
+	if instance.Spec.OpenshiftMasterDefaultSubdomain != "" {
+		f.WriteString(fmt.Sprintf("openshift_master_default_subdomain=%s\n", instance.Spec.OpenshiftMasterDefaultSubdomain))
+	}
+	if instance.Spec.PublicMasterHostname != "" {
+		f.WriteString(fmt.Sprintf("public_master_hostname=%s\n", instance.Spec.PublicMasterHostname))
 	}
 	f.WriteString("\n")
 	f.WriteString("[masters]\n")
