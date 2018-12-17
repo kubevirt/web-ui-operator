@@ -10,7 +10,7 @@ Depending on your OpenShift cluster installation, please choose from the two var
 If `Cluster Console` (in `openshift-console` project) is deployed (as by default), optional parameters can be automatically retrieved from its ConfigMap (follow Variant 1).
 Otherwise they need to be explicitely provided (Variant 2).
 
-### Variant 1: The openshift-console Is Not Installed
+### Variant 1: The openshift-console Is Installed
 To ease deployment, parameters of the cluster deployment can be  automatically retrieved from the `openshift-console` ConfigMap, if present.
 
 To do so, the operator's service account needs to be granted to access the `openshift-console` namespace.
