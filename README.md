@@ -67,7 +67,7 @@ By providing non-empty value here, the Web UI deployment is **upgraded**/**downg
 
 Please note, the `version` needs to match Web UI's docker image tag in the specified repository (seed [default quay repo](https://quay.io/repository/kubevirt/kubevirt-web-ui?tab=tags)).
 
-### Finish Operator Deployment
+### Fire Web UI Deployment
 Once `spec.version` in the CR is set:
 
 ```angular2
