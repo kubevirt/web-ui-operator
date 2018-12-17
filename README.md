@@ -26,6 +26,7 @@ oc apply -f deploy/role_extra_for_console.yaml
 oc apply -f deploy/role_binding.yaml
 oc apply -f deploy/role_binding_extra_for_console.yaml
 
+oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_crd.yaml
 oc apply -f deploy/operator.yaml
 ```
 
@@ -51,6 +52,7 @@ oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator
 oc apply -f deploy/role.yaml
 oc apply -f deploy/role_binding.yaml
 
+oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_crd.yaml
 oc apply -f deploy/operator.yaml
 ```
 
@@ -77,7 +79,7 @@ Actual [Kubevirt Web UI](https://github.com/kubevirt/web-ui) deployment is manag
 Once `spec.version` in the CR is set:
 
 ```angular2
-oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_crd.yaml
+oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_cr.yaml
 ```
 
 Other parameters:
