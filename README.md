@@ -68,6 +68,8 @@ By providing non-empty value here, the Web UI deployment is **upgraded**/**downg
 Please note, the `version` needs to match Web UI's docker image tag in the specified repository (seed [default quay repo](https://quay.io/repository/kubevirt/kubevirt-web-ui?tab=tags)).
 
 ### Fire Web UI Deployment
+Actual [Kubevirt Web UI](https://github.com/kubevirt/web-ui) deployment is managed via `KWebUI` custom resource
+
 Once `spec.version` in the CR is set:
 
 ```angular2
@@ -75,11 +77,11 @@ oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_crd.yaml
 oc apply -f deploy/operator.yaml 
 ```
 
-### Kubevirt Web UI Deployment
-Actual [Kubevirt Web UI](https://github.com/kubevirt/web-ui) deployment is managed via `KWebUI` custom resource edited in previous step:
-```angular2
-oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_cr.yaml
-```
+Other parameters:
+- registry_url: "quay.io"
+- registry_namespace: "kubevirt"
+- openshift_master_default_subdomain
+- public_master_hostname
 
 ### Status
 Processing status can be observed within the `KWebUI` custom resource's `status` section:
