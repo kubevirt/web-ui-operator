@@ -2,13 +2,18 @@
 The kubernetes [operator](https://github.com/operator-framework) for managing [Kubevirt Web UI](https://github.com/kubevirt/web-ui) deployment.
 Leverages the [operator-sdk](https://github.com/operator-framework/operator-sdk/).
 
+Kubevirt-web-ui image repository on quay.io: [quay.io/repository/kubevirt/kubevirt-web-ui](https://quay.io/repository/kubevirt/kubevirt-web-ui?tab=tags)
+
 ## How to Run
 Depending on your OpenShift cluster installation, please choose from the two variants bellow.
 
-If `Cluster Console` (resp. `openshift-console`) is deployed (by default), optional parameters can be automatically retrieved from its ConfigMap.
-Otherwise they need to be explicitely provided.
+If `Cluster Console` (in `openshift-console` project) is deployed (as by default), optional parameters can be automatically retrieved from its ConfigMap (follow Variant 1).
+Otherwise they need to be explicitely provided (Variant 2).
 
-### Common Part
+### Variant 1: The openshift-console Is Not Installed
+To ease deployment, parameters of the cluster deployment can be  automatically retrieved from the `openshift-console` ConfigMap, if present.
+
+To do so, the operator's service account needs to be granted to access the `openshift-console` namespace.
 
 ```angular2
 oc new-project kubevirt-web-ui
@@ -17,14 +22,8 @@ oc apply -f deploy/service_account.yaml
 oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator
 
 oc apply -f deploy/role.yaml
-oc apply -f deploy/role_binding.yaml
-```
-
-### Variant 1: The openshift-console Is Installed
-To ease deployment, additional settings can be retrieved from the `openshift-console` ConfigMap, if present:
-
-```angular2
 oc apply -f deploy/role_extra_for_console.yaml
+oc apply -f deploy/role_binding.yaml
 oc apply -f deploy/role_binding_extra_for_console.yaml
 ```
 
@@ -39,8 +38,21 @@ In `deploy/crds/kubevirt_v1alpha1_kwebui_cr.yaml`, add following under `spec` se
   - example: `master.your.domain.com:8443`
   - Public URL of your first master node, used for composition of public `console` URL for redirects
 
+Then execute:
+
+```angular2
+oc new-project kubevirt-web-ui
+
+oc apply -f deploy/service_account.yaml
+oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator
+
+oc apply -f deploy/role.yaml
+oc apply -f deploy/role_binding.yaml
+```
+
+
 ### Kubevirt Web UI Version to Install
-Edit `spec.version` in `deploy/crds/kubevirt_v1alpha1_kwebui_cr.yaml`.
+To actually deploy the Kubevirt Web UI, choose it's version by editting `spec.version` in `deploy/crds/kubevirt_v1alpha1_kwebui_cr.yaml`.
 
 Example:
 ```angular2
@@ -53,9 +65,11 @@ The image repository can be farther tweaked by using the `spec.registry_url` and
 To **undeploy** the Web UI, set `spec.version` to empty string (`""`).
 By providing non-empty value here, the Web UI deployment is **upgraded**/**downgraded**.
 
-Please note, the `version` needs to match Web UI's docker image tag in the specified repository.  
+Please note, the `version` needs to match Web UI's docker image tag in the specified repository (seed [default quay repo](https://quay.io/repository/kubevirt/kubevirt-web-ui?tab=tags)).
 
 ### Finish Operator Deployment
+Once `spec.version` in the CR is set:
+
 ```angular2
 oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_crd.yaml
 oc apply -f deploy/operator.yaml 
