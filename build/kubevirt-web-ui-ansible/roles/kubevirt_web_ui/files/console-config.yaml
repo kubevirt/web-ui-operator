@@ -14,6 +14,6 @@ auth:
   oauthEndpointCAFile: ''
   logoutRedirect: ''
 customization:
-  branding: okdvirt
+  branding: ''
   documentationBaseURL: ''
 
