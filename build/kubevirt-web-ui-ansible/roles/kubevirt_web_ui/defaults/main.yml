@@ -18,6 +18,8 @@ kubevirt_web_ui_cert: ""
 kubevirt_web_ui_key: ""
 kubevirt_web_ui_ca: ""
 
+kubevirt_web_ui_branding: "okdvirt"
+
 kubevirt_web_ui_auth_ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
 kubevirt_web_ui_documentation_base_url: "https://docs.openshift.com/container-platform/3.11/"

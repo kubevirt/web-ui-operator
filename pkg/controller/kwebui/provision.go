@@ -180,6 +180,7 @@ func generateInventory(instance *kubevirtv1alpha1.KWebUI, namespace string, acti
 	f.WriteString(strings.Join([]string{"registry_namespace=", Def(instance.Spec.RegistryNamespace, "kubevirt"), "\n"}, ""))
 	f.WriteString(strings.Join([]string{"docker_tag=", Def(instance.Spec.Version, "v1.4"), "\n"}, ""))
 	f.WriteString(strings.Join([]string{"kubevirt_web_ui_namespace=", Def(namespace, "kubevirt-web-ui"), "\n"}, ""))
+	f.WriteString(strings.Join([]string{"kubevirt_web_ui_branding=", Def(instance.Spec.Branding, "okdvirt"), "\n"}, ""))
 	if action == "deprovision" {
 		f.WriteString("preserve_namespace=true\n")
 	}

@@ -6,3 +6,4 @@ spec:
   version: "1.4.0-5"
   registry_url: "quay.io"
   registry_namespace: "kubevirt"
+  branding: "okdvirt"

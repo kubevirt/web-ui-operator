@@ -17,6 +17,8 @@ type KWebUISpec struct {
 	OpenshiftMasterDefaultSubdomain string `json:"openshift_master_default_subdomain,omitempty"` // optional - workaround if openshift-console is not deployed, otherwise auto-discovered from its ConfigMap
 	PublicMasterHostname string `json:"public_master_hostname,omitempty"` // optional - workaround if openshift-console is not deployed, otherwise auto-discovered from its ConfigMap
 
+	Branding string `json:"branding,omitempty"` // optional, default: okdvirt
+
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 }
