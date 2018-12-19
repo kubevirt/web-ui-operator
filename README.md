@@ -13,13 +13,13 @@ Otherwise they need to be explicitely provided (Variant 2).
 ### Variant 1: The openshift-console Is Installed
 To ease deployment, parameters of the cluster deployment can be  automatically retrieved from the `openshift-console` ConfigMap, if present.
 
-To do so, the operator's service account needs to be granted to access the `openshift-console` namespace.
+To do so, the operator's service account will be granted to access the `openshift-console` namespace.
 
 ```angular2
 oc new-project kubevirt-web-ui
 
 oc apply -f deploy/service_account.yaml
-oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator
+oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator  # use the "anyuid" string as it is
 
 oc apply -f deploy/role.yaml
 oc apply -f deploy/role_extra_for_console.yaml
