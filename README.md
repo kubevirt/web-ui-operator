@@ -17,17 +17,18 @@ To do so, the operator's service account will be granted to access the `openshif
 
 ```angular2
 oc new-project kubevirt-web-ui
+cd deploy
 
-oc apply -f deploy/service_account.yaml
+oc apply -f service_account.yaml
 oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator  # use the "anyuid" string as it is
 
-oc apply -f deploy/role.yaml
-oc apply -f deploy/role_extra_for_console.yaml
-oc apply -f deploy/role_binding.yaml
-oc apply -f deploy/role_binding_extra_for_console.yaml
+oc apply -f role.yaml
+oc apply -f role_extra_for_console.yaml
+oc apply -f role_binding.yaml
+oc apply -f role_binding_extra_for_console.yaml
 
-oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_crd.yaml
-oc apply -f deploy/operator.yaml
+oc apply -f crds/kubevirt_v1alpha1_kwebui_crd.yaml
+oc apply -f operator.yaml
 ```
 
 ### Variant 2: The openshift-console Is Not Installed
@@ -45,15 +46,16 @@ Then execute:
 
 ```angular2
 oc new-project kubevirt-web-ui
+cd deploy
 
-oc apply -f deploy/service_account.yaml
+oc apply -f service_account.yaml
 oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator
 
-oc apply -f deploy/role.yaml
-oc apply -f deploy/role_binding.yaml
+oc apply -f role.yaml
+oc apply -f role_binding.yaml
 
-oc apply -f deploy/crds/kubevirt_v1alpha1_kwebui_crd.yaml
-oc apply -f deploy/operator.yaml
+oc apply -f crds/kubevirt_v1alpha1_kwebui_crd.yaml
+oc apply -f operator.yaml
 ```
 
 
