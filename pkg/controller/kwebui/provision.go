@@ -37,7 +37,7 @@ func ReconcileExistingDeployment(r *ReconcileKWebUI, request reconcile.Request, 
 			// quay.io/kubevirt/kubevirt-web-ui:v1.4
 			existingVersion = AfterLast(container.Image, ":")
 			log.Info(fmt.Sprintf("Existing image tag: %s, from image: %s", existingVersion, container.Image))
-			existingVersion = strings.TrimPrefix(existingVersion, "v")
+			// existingVersion = strings.TrimPrefix(existingVersion, "v")
 			if existingVersion == "" {
 				log.Info("Failed to read existing image tag")
 				return reconcile.Result{}, stderrors.New("failed to read existing image tag")
@@ -46,7 +46,7 @@ func ReconcileExistingDeployment(r *ReconcileKWebUI, request reconcile.Request, 
 		}
 	}
 
-	// TODO: reconcile based on other parameters, not only the Version
+	// TODO: reconcile based on other parameters, not only on the Version
 
 	if existingVersion == "" {
 		log.Info("Can not read deployed container version, giving up.")
