@@ -109,22 +109,10 @@ operator-sdk build quay.io/[YOUR_REPO]/kubevirt-web-ui-operator
 ```
 
 ## Note About Internals
-To achieve full parity with the Kubevirt RPM installation, the operator reuses the [kubevirt-ansible playbook](https://github.com/kubevirt/kubevirt-ansible/tree/master/playbooks/kubevirt-web-ui).
-
-This decision has several consequences, namely
-- requirement for the `oc` and `ansible-playbook` binaries within the docker image (increases size of the image significantly)
-- requirement for the `anyuid` SCC for the service account as the ansible requires actual user to run under (in particular, container's `root` is recycled)
-
 The project is intentionally not based on the [ansible operator-sdk](https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md) as there is still plan to remove the ansible code completely once the (de)provision logic can live in a single project only. 
 
-Copy of the ansible playbook is stored under `build/kubevirt-web-ui-ansible` directory.
-This playbook is extracted from the kubevirt-ansible project.
-
-Please run following command to update it in this project:
-
-```angular2
-$ ./update.ansible.sh [RELEASE]
-```
+The ansible playbook is stored under `build/kubevirt-web-ui-ansible` directory.
+This playbook is extracted from the former kubevirt-ansible project.
 
 By design, the `kubevirt-web-ui-ansible` uses the `oc` client to perform particular installation steps.
 To make it work, kubeconfig is recomposed by the operator based on in-cluster-config secrets.
