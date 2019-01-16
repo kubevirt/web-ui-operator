@@ -65,7 +65,7 @@ To actually deploy the Kubevirt Web UI, choose it's version by editting `spec.ve
 Example:
 ```angular2
 spec:
-  version: "1.4.0-4"
+  version: "v1.4.0-9"
 ``` 
 
 The image repository can be farther tweaked by using the `spec.registry_url` and `spec.registry_namespace` parameters. 
