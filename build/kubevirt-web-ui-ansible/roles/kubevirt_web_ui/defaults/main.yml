@@ -10,6 +10,7 @@ kubevirt_web_ui_nodeselector: {}
 
 __console_template_file: "console-template.yaml"
 __console_config_file: "console-config.yaml"
+__v2vvmware_crd_file: "{{ role_path }}/files/kubevirt_v1alpha1_v2vvmware_crd.yaml"
 
 # Default the replica count to the number of masters.
 kubevirt_web_ui_replica_count: "1"
