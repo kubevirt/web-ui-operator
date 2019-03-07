@@ -4,6 +4,9 @@
 - name: Remove V2VVMWare Custom Resource Definition
   shell: "{{ openshift_client_binary }} delete -f {{ __v2vvmware_crd_file }} || true"
 
+- name: Remove vmware-to-kubevirt-os mapping from kube-public
+  shell: "{{ openshift_client_binary }} delete -f {{ __vmware_to_kubevirt_os_file }} || true"
+
 - name: Remove Kubevirt Web UI OAuth client
   shell: "{{ openshift_client_binary }} delete oauthclient kubevirt-web-ui"
 

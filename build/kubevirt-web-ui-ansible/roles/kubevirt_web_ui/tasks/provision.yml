@@ -78,6 +78,9 @@
 - name: Add V2VVmware Custom Resource Definition
   shell: "{{ openshift_client_binary }} apply -f {{ __v2vvmware_crd_file }}"
 
+- name: Add vmware-to-kubevirt-os mapping ConfigMap to kube-public
+  shell: "{{ openshift_client_binary }} apply -f {{ __vmware_to_kubevirt_os_file }}"
+
 - name: Remove temp directory
   file:
     state: absent
