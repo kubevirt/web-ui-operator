@@ -79,6 +79,7 @@ objects:
           - /opt/bridge/bin/bridge
           - "--public-dir=/opt/bridge/static"
           - "--config=/var/console-config/console-config.yaml"
+          - "--service-ca-file=/var/service-ca/service-ca.crt"
           image: ${IMAGE}
           imagePullPolicy: IfNotPresent
           readinessProbe:
@@ -113,6 +114,9 @@ objects:
             readOnly: true
           - mountPath: /var/console-config
             name: console-config
+          - name: service-ca
+            readOnly: true
+            mountPath: /var/service-ca
         dnsPolicy: ClusterFirst
         restartPolicy: Always
         terminationGracePeriodSeconds: 30
@@ -129,6 +133,10 @@ objects:
           configMap:
             defaultMode: 0440
             name: console-config
+        - name: service-ca
+          configMap:
+            name: service-ca
+            defaultMode: 0440
         nodeSelector: "${{NODE_SELECTOR}}"
 
 # to create the config for the console
