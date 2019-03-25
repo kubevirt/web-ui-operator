@@ -18,6 +18,7 @@
         path: "{{ mktemp.stdout }}/{{ __console_config_file }}"
         regexp: "^  masterPublicURL:.*$"
         line: "  masterPublicURL: '{{ openshift_master_public_api_url }}'"
+      when: openshift_master_public_api_url | default("") | string != ""
     - name: Change oauthEndpointCAFile
       lineinfile:
         path: "{{ mktemp.stdout }}/{{ __console_config_file }}"
