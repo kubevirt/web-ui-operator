@@ -24,8 +24,11 @@ oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator  # use the "any
 
 oc apply -f role.yaml
 oc apply -f role_extra_for_console.yaml
+oc apply -f role_kube-public.yaml
+
 oc apply -f role_binding.yaml
 oc apply -f role_binding_extra_for_console.yaml
+oc apply -f role_binding_kube-public.yaml
 
 oc apply -f crds/kubevirt_v1alpha1_kwebui_crd.yaml
 oc apply -f operator.yaml
