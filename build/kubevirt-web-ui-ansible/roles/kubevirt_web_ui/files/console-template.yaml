@@ -75,11 +75,7 @@ objects:
                     app: kubevirt-web-ui
                 topologyKey: kubernetes.io/hostname
         containers:
-        - command:
-          - /opt/bridge/bin/bridge
-          - "--public-dir=/opt/bridge/static"
-          - "--config=/var/console-config/console-config.yaml"
-          - "--service-ca-file=/var/service-ca/service-ca.crt"
+        - command: /bin/sh -c "if [ -e /var/service-ca/service-ca.crt ] ; then /opt/bridge/bin/bridge --public-dir=/opt/bridge/static --config=/var/console-config/console-config.yaml --service-ca-file=/var/service-ca/service-ca.crt ; else echo The service-ca is missing ; /opt/bridge/bin/bridge --public-dir=/opt/bridge/static --config=/var/console-config/console-config.yaml ; fi" 
           image: ${IMAGE}
           imagePullPolicy: IfNotPresent
           readinessProbe:
