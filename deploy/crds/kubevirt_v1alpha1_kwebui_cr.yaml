@@ -3,7 +3,7 @@ kind: KWebUI
 metadata:
   name: kubevirt-web-ui
 spec:
-  version: "v2.0.0-3"
+  version: "latest"
   registry_url: "quay.io"
   registry_namespace: "kubevirt"
   branding: "okdvirt"
