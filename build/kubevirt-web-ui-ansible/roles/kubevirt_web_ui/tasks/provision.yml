@@ -73,6 +73,7 @@
     --param TLS_CERT="{{ console_cert | default('') }}"
     --param TLS_KEY="{{ console_key | default('') }}"
     --param TLS_CA_CERT="{{ console_ca_cert | default('') }}"
+    --param IMAGE_PULL_POLICY="{{ image_pull_policy }}"
     | {{ openshift_client_binary }} apply -f -
 
 - name: Add service-ca ConfigMap

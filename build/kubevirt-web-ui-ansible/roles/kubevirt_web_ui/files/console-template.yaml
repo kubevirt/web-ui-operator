@@ -20,6 +20,8 @@ parameters:
 - name: CONSOLE_HOSTNAME
   value: kubevirt-web-ui.router.default.svc.cluster.local
   required: true
+- name: IMAGE_PULL_POLICY
+  value: IfNotPresent
 - name: TLS_CERT
 - name: TLS_KEY
 - name: TLS_CA_CERT
@@ -80,7 +82,7 @@ objects:
           - "-c"
           - "if [ -e /var/service-ca/service-ca.crt ] ; then /opt/bridge/bin/bridge --public-dir=/opt/bridge/static --config=/var/console-config/console-config.yaml --service-ca-file=/var/service-ca/service-ca.crt ; else echo The service-ca is missing ; /opt/bridge/bin/bridge --public-dir=/opt/bridge/static --config=/var/console-config/console-config.yaml ; fi" 
           image: ${IMAGE}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           readinessProbe:
             httpGet:
               path: /health
