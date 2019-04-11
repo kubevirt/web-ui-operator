@@ -16,3 +16,5 @@ oc delete role kubevirt-web-ui-operator -n kube-public
 oc delete rolebinding kubevirt-web-ui-operator -n kube-public
 
 oc adm policy remove-scc-from-user anyuid -z kubevirt-web-ui-operator
+oc delete scc kubevirt-web-ui-operator
+
