@@ -1,0 +1,21 @@
+# Workaround for ansible-playbook which requires named user and write-access to its home dir.
+# To make this working on OpenShift, add the "kubevirt-web-ui-operator" service account to "anyuid" SCC or apply custom scc_anyuid.yaml
+# Allowed User ID range (sort of [1000440000, 1000449999]) is everchanging and it is not possible to find one-fits-all value.
+kind: SecurityContextConstraints
+apiVersion: security.openshift.io/v1
+allowPrivilegeEscalation: true
+fsGroup:
+  type: RunAsAny
+groups:
+  - system:cluster-admins
+metadata:
+  name: kubevirt-web-ui-operator
+readOnlyRootFilesystem: false
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+users:
+  - system:serviceaccount:kubevirt-web-ui:kubevirt-web-ui-operator
