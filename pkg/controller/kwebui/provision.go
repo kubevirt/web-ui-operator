@@ -2,22 +2,22 @@ package kwebui
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"os"
 	"strings"
-	stderrors "errors"
 
 	extenstionsv1beta1 "k8s.io/api/extensions/v1beta1"
-	"k8s.io/client-go/rest"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
 	kubevirtv1alpha1 "kubevirt.io/web-ui-operator/pkg/apis/kubevirt/v1alpha1"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const InventoryFilePattern = "/tmp/inventory_%s.ini"
 const ConfigFilePattern = "/tmp/config_%s"
-const PlaybookFile = "/kubevirt-web-ui-ansible/playbooks/kubevirt-web-ui/config.yml"
+const PlaybookFile = "/opt/kwebui/kubevirt-web-ui-ansible/playbooks/kubevirt-web-ui/config.yml"
 const WebUIContainerName = "console"
 
 const PhaseFreshProvision = "PROVISION_STARTED"
@@ -68,7 +68,7 @@ func ReconcileExistingDeployment(r *ReconcileKWebUI, request reconcile.Request, 
 	// requested and deployed version are different
 	// It should be enough to just re-execute the provision process and restart kubevirt-web-ui pod to read the updated ConfigMap.
 	// But deprovision is safer to address potential incompatible changes in the future.
-	_ , err := deprovision(r, request, instance)
+	_, err := deprovision(r, request, instance)
 	if err != nil {
 		log.Error(err, "Failed to deprovision existing deployment. Can not continue with provision of the requested one.")
 		return reconcile.Result{}, err

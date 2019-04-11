@@ -15,17 +15,10 @@ spec:
       serviceAccountName: kubevirt-web-ui-operator
       containers:
         - name: kubevirt-web-ui-operator
-          # ansible-playbook for local connection requires named user
-          # "sudo ansible-playbook" does not work, since even the sudo requires named user before escalation
-          # TODO: add non-root user in Dockerfile and use it here. The anyuid-SCC will still be required.
-          securityContext:
-            runAsUser: 0
           image: quay.io/kubevirt/kubevirt-web-ui-operator:latest
           ports:
           - containerPort: 60000
             name: metrics
-          command:
-          - kubevirt-web-ui-operator
           imagePullPolicy: Always
           readinessProbe:
             exec:
