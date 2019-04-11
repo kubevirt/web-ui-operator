@@ -1,0 +1,18 @@
+#!/bin/bash
+set -x
+
+oc project kubevirt-web-ui
+oc get kwebui kubevirt-web-ui -o yaml | sed 's/^  version: .*$/  version:/g' | oc apply -f -
+
+# wait till undeployed
+until (oc get pods -o name | grep -qv console-) ; do echo Waiting till undeployed ; done
+
+oc delete project kubevirt-web-ui
+oc delete clusterrole kubevirt-web-ui-operator
+oc delete clusterrolebinding kubevirt-web-ui-operator
+oc delete role kubevirt-web-ui-operator -n openshift-console
+oc delete rolebinding kubevirt-web-ui-operator -n openshift-console
+oc delete role kubevirt-web-ui-operator -n kube-public
+oc delete rolebinding kubevirt-web-ui-operator -n kube-public
+
+oc adm policy remove-scc-from-user anyuid -z kubevirt-web-ui-operator
