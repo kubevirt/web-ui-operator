@@ -20,7 +20,6 @@ oc new-project kubevirt-web-ui
 cd deploy
 
 oc apply -f service_account.yaml
-oc apply -f scc_anyuid.yaml
 
 oc apply -f role.yaml
 oc apply -f role_extra_for_console.yaml
@@ -52,7 +51,6 @@ oc new-project kubevirt-web-ui
 cd deploy
 
 oc apply -f service_account.yaml
-oc adm policy add-scc-to-user anyuid -z kubevirt-web-ui-operator
 
 oc apply -f role.yaml
 oc apply -f role_binding.yaml
