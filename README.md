@@ -22,19 +22,15 @@ cd deploy
 oc apply -f service_account.yaml
 
 oc apply -f role.yaml
-oc apply -f role_extra_for_console.yaml
-oc apply -f role_kube-public.yaml
 
 oc apply -f role_binding.yaml
-oc apply -f role_binding_extra_for_console.yaml
-oc apply -f role_binding_kube-public.yaml
 
 oc apply -f crds/kubevirt_v1alpha1_kwebui_crd.yaml
 oc apply -f operator.yaml
 ```
 
 ### Variant 2: The openshift-console Is Not Installed
-In `deploy/crds/kubevirt_v1alpha1_kwebui_cr.yaml`, add following under `spec` section based on your actual OpenShift cluster deployment: 
+In `deploy/crds/kubevirt_v1alpha1_kwebui_cr.yaml`, add following under `spec` section based on your actual OpenShift cluster deployment:
 
 - `openshift_master_default_subdomain=[SUBDOMAIN FOR APPLICATIONS]`
   - example: `router.default.svc.cluster.local`
@@ -67,9 +63,9 @@ Example:
 ```angular2
 spec:
   version: "v1.4.0-9"
-``` 
+```
 
-The image repository can be farther tweaked by using the `spec.registry_url` and `spec.registry_namespace` parameters. 
+The image repository can be farther tweaked by using the `spec.registry_url` and `spec.registry_namespace` parameters.
 
 To **undeploy** the Web UI, set `spec.version` to empty string (`""`).
 By providing non-empty value here, the Web UI deployment is **upgraded**/**downgraded**.
@@ -110,7 +106,7 @@ operator-sdk build quay.io/[YOUR_REPO]/kubevirt-web-ui-operator
 ```
 
 ## Note About Internals
-The project is intentionally not based on the [ansible operator-sdk](https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md) as there is still plan to remove the ansible code completely once the (de)provision logic can live in a single project only. 
+The project is intentionally not based on the [ansible operator-sdk](https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md) as there is still plan to remove the ansible code completely once the (de)provision logic can live in a single project only.
 
 The ansible playbook is stored under `build/kubevirt-web-ui-ansible` directory.
 This playbook is extracted from the former kubevirt-ansible project.
