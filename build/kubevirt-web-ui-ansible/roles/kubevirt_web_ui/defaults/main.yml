@@ -16,7 +16,7 @@ __vmware_to_kubevirt_os_file: "{{ role_path }}/files/vmware-to-kubevirt-os.yaml"
 __service_ca_config_file: "{{ role_path }}/files/service_ca_config.yaml"
 
 # Default the replica count to the number of masters.
-kubevirt_web_ui_replica_count: "1"
+kubevirt_web_ui_replica_count: "2"
 
 kubevirt_web_ui_cert: ""
 kubevirt_web_ui_key: ""
