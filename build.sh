@@ -1,6 +1,8 @@
 #!/bin/bash
 set -ex
 
+git diff-index --quiet HEAD || (echo Commit your changes first ; false) # fail if uncomitted changes
+
 GIT_REMOTE_NAME=upstream # or origin
 
 CSV_VERSION=0.1.2
