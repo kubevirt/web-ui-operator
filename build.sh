@@ -1,8 +1,8 @@
 #!/bin/bash
 set -ex
 
-VERSION=v1.4.0
-RELEASE=4 # see https://quay.io/repository/kubevirt/kubevirt-web-ui-operator?tab=tags
+VERSION=v0.1.1
+RELEASE=1 # see https://quay.io/repository/kubevirt/kubevirt-web-ui-operator?tab=tags
 
 TAG1=${VERSION}-${RELEASE}
 TAG2=${VERSION}
