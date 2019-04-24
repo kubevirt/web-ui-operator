@@ -1,6 +1,12 @@
 #!/bin/bash
 set -ex
 
+if [ x${CSV_VERSION} = x ] ; then
+  echo Please provide CSV_VERSION
+  echo Example: CSV_VERSION=0.1.3 $0
+  exit 1
+fi
+
 export CSV_VERSION=0.1.2
 VERSION=v${CSV_VERSION}
 RELEASE=1 # see https://quay.io/repository/kubevirt/kubevirt-web-ui-operator?tab=tags
