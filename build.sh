@@ -20,6 +20,9 @@ git status
 git checkout -b olm-${CSV_VERSION}-${UNIQUE}
 ./hack/make-olm.sh
 git status
+git add deploy/olm-catalog
+git commit -m "Synced by hack/make-olm.sh for ${CSV_VERSION}"
+git diff-index --quiet HEAD || (echo Commit your changes first ; false) # fail if uncomitted changes
 
 operator-sdk build quay.io/kubevirt/kubevirt-web-ui-operator:$TAG1
 docker push quay.io/kubevirt/kubevirt-web-ui-operator:$TAG1 
@@ -29,5 +32,9 @@ docker push quay.io/kubevirt/kubevirt-web-ui-operator:$TAG2
 
 docker tag quay.io/kubevirt/kubevirt-web-ui-operator:$TAG1 quay.io/kubevirt/kubevirt-web-ui-operator:latest 
 docker push quay.io/kubevirt/kubevirt-web-ui-operator:latest
+
+echo Finished
+echo Do not forget to push git changes
+git branch
 
 # go build -o build/_output/bin/web-ui-operator cmd/manager/main.go
