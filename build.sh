@@ -7,7 +7,6 @@ if [ x${CSV_VERSION} = x ] ; then
   exit 1
 fi
 
-export CSV_VERSION=0.1.2
 VERSION=v${CSV_VERSION}
 RELEASE=1 # see https://quay.io/repository/kubevirt/kubevirt-web-ui-operator?tab=tags
 
@@ -27,7 +26,7 @@ git checkout -b olm-${CSV_VERSION}-${UNIQUE}
 ./hack/make-olm.sh
 git status
 git add deploy/olm-catalog
-git commit -m "Synced by hack/make-olm.sh for ${CSV_VERSION}"
+git commit -m "Synced by hack/make-olm.sh for ${CSV_VERSION}" || true
 git diff-index --quiet HEAD || (echo Commit your changes first ; false) # fail if uncomitted changes
 
 operator-sdk build quay.io/kubevirt/kubevirt-web-ui-operator:$TAG1
