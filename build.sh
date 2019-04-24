@@ -1,18 +1,17 @@
 #!/bin/bash
 set -ex
 
-git diff-index --quiet HEAD || (echo Commit your changes first ; false) # fail if uncomitted changes
-
-GIT_REMOTE_NAME=upstream # or origin
-
-CSV_VERSION=0.1.2
+export CSV_VERSION=0.1.2
 VERSION=v${CSV_VERSION}
 RELEASE=1 # see https://quay.io/repository/kubevirt/kubevirt-web-ui-operator?tab=tags
 
+GIT_REMOTE_NAME=upstream # or origin
 UNIQUE=`date +"%Y-%m-%d_%H-%M-%S"`
 
 TAG1=${VERSION}-${RELEASE}
 TAG2=${VERSION}
+
+git diff-index --quiet HEAD || (echo Commit your changes first ; false) # fail if uncomitted changes
 
 sleep 5
 
