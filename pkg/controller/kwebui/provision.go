@@ -172,16 +172,22 @@ func generateInventory(instance *kubevirtv1alpha1.KWebUI, namespace string, acti
 	}
 	defer f.Close()
 
+	registryUrl := Def(instance.Spec.RegistryUrl, os.Getenv("OPERATOR_REGISTRY"), "quay.io/kubevirt")
+	registryNamespace := Def(instance.Spec.RegistryNamespace, "", "")
+	version := Def(instance.Spec.Version, os.Getenv("OPERATOR_TAG"),"v1.4")
+	branding := Def(instance.Spec.Branding, os.Getenv("BRANDING"), "okdvirt")
+	imagePullPolicy := Def(instance.Spec.ImagePullPolicy, os.Getenv("IMAGE_PULL_POLICY"), "IfNotPresent")
+
 	f.WriteString("[OSEv3:children]\nmasters\n\n")
 	f.WriteString("[OSEv3:vars]\n")
 	f.WriteString("platform=openshift\n")
 	f.WriteString(strings.Join([]string{"apb_action=", action, "\n"}, ""))
-	f.WriteString(strings.Join([]string{"registry_url=", Def(instance.Spec.RegistryUrl, "quay.io"), "\n"}, ""))
-	f.WriteString(strings.Join([]string{"registry_namespace=", Def(instance.Spec.RegistryNamespace, "kubevirt"), "\n"}, ""))
-	f.WriteString(strings.Join([]string{"docker_tag=", Def(instance.Spec.Version, "v1.4"), "\n"}, ""))
-	f.WriteString(strings.Join([]string{"kubevirt_web_ui_namespace=", Def(namespace, "kubevirt-web-ui"), "\n"}, ""))
-	f.WriteString(strings.Join([]string{"kubevirt_web_ui_branding=", Def(instance.Spec.Branding, "okdvirt"), "\n"}, ""))
-	f.WriteString(strings.Join([]string{"image_pull_policy=", Def(instance.Spec.ImagePullPolicy, "IfNotPresent"), "\n"}, ""))
+	f.WriteString(strings.Join([]string{"registry_url=", registryUrl, "\n"}, ""))
+	f.WriteString(strings.Join([]string{"registry_namespace=", registryNamespace, "\n"}, ""))
+	f.WriteString(strings.Join([]string{"docker_tag=", version, "\n"}, ""))
+	f.WriteString(strings.Join([]string{"kubevirt_web_ui_namespace=", Def(namespace, "kubevirt-web-ui", ""), "\n"}, ""))
+	f.WriteString(strings.Join([]string{"kubevirt_web_ui_branding=", branding, "\n"}, ""))
+	f.WriteString(strings.Join([]string{"image_pull_policy=", imagePullPolicy, "\n"}, ""))
 	if action == "deprovision" {
 		f.WriteString("preserve_namespace=true\n")
 	}
