@@ -10,10 +10,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const Registry = "quay.io"
 const Name = "kubevirt-web-ui-operator"
 
 func GetDeployment(namespace string, repository string, tag string, imagePullPolicy string) *appsv1.Deployment {
-	image := fmt.Sprintf("%s/%s:%s", repository, Name, tag)
+	image := fmt.Sprintf("%s/%s/%s:%s", Registry, repository, Name, tag)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -85,7 +86,7 @@ func GetDeployment(namespace string, repository string, tag string, imagePullPol
 									},
 								},
 								{
-									Name:  "WATCH_NAMESPACE",
+									Name: "WATCH_NAMESPACE",
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
 											FieldPath: "metadata.namespace",
