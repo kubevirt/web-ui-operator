@@ -39,6 +39,16 @@
         path: "{{ mktemp.stdout }}/{{ __console_config_file }}"
         regexp: "^  branding:.*$"
         line: "  branding: '{{ kubevirt_web_ui_branding }}'"
+    - name: Change Registry
+      lineinfile:
+        path: "{{ mktemp.stdout }}/{{ __console_config_file }}"
+        regexp: "^  registry:.*$"
+        line: "  registry: '{{ registry_url }}'"
+    - name: Change V2V image tag
+      lineinfile:
+        path: "{{ mktemp.stdout }}/{{ __console_config_file }}"
+        regexp: "^  imageTagV2V:.*$"
+        line: "  imageTagV2V: '{{ kubevirt_web_ui_image_tag | default('latest') }}'"
 # Context selector is temporarily removed - https://github.com/kubevirt/web-ui/issues/67
 #    - name: Add context selector URL
       # Add the developer console URL to the console picker on upgrade
