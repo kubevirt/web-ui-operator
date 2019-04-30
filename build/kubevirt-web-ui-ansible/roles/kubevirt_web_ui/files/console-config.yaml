@@ -16,4 +16,5 @@ auth:
 customization:
   branding: ''
   documentationBaseURL: ''
-
+  registry: ''
+  imageTagV2V: ''
