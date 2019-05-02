@@ -10,7 +10,7 @@ import (
 	extenstionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
-	kubevirtv1alpha1 "kubevirt.io/web-ui-operator/pkg/apis/kubevirt/v1alpha1"
+	kubevirtv1alpha1 "github.com/kubevirt/web-ui-operator/pkg/apis/kubevirt/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
