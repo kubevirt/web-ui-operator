@@ -8,7 +8,10 @@
   when: docker_tag is defined
 
 - set_fact: kubevirt_web_ui_image_name="{{ registry_url }}/{{ registry_namespace }}/kubevirt-web-ui:{{ kubevirt_web_ui_image_tag | default("latest")}}"
-  when: kubevirt_web_ui_image_name is not defined and registry_url is defined and registry_namespace is defined
+  when: kubevirt_web_ui_image_name is not defined and registry_url is defined and (registry_namespace | default("") | string != "")
+
+- set_fact: kubevirt_web_ui_image_name="{{ registry_url }}/kubevirt-web-ui:{{ kubevirt_web_ui_image_tag | default("latest")}}"
+  when: kubevirt_web_ui_image_name is not defined and registry_url is defined and (registry_namespace | default("") | string == "")
 
 - name: Verify required kubevirt_web_ui_image_name variable is set
   fail:
