@@ -271,6 +271,7 @@ func GetClusterRole() *rbacv1.ClusterRole {
 					"apiextensions.k8s.io",
 					"kubevirt.io",
 					"extensions",
+					"apps",
 				},
 				Resources: []string{
 					"*",
@@ -286,6 +287,20 @@ func GetClusterRole() *rbacv1.ClusterRole {
 				Resources: []string{
 					"configmaps",
 					"pods",
+					"namespaces",
+					"projects",
+					"services",
+					"endpoints",
+					"persistentvolumeclaims",
+					"events",
+					"secrets",
+					"replicationcontrollers",
+					"serviceaccounts",
+					"deployments",
+					"daemonsets",
+					"replicasets",
+					"statefulsets",
+
 				},
 				Verbs: []string{
 					"*",
