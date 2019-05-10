@@ -268,10 +268,14 @@ func GetClusterRole() *rbacv1.ClusterRole {
 			{
 				APIGroups: []string{
 					"oauth.openshift.io",
+                                        "project.openshift.io",
+                                        "template.openshift.io",
+                                        "route.openshift.io",
 					"apiextensions.k8s.io",
 					"kubevirt.io",
 					"extensions",
 					"apps",
+                                        "monitoring.coreos.com",
 				},
 				Resources: []string{
 					"*",
@@ -288,7 +292,6 @@ func GetClusterRole() *rbacv1.ClusterRole {
 					"configmaps",
 					"pods",
 					"namespaces",
-					"projects",
 					"services",
 					"endpoints",
 					"persistentvolumeclaims",
@@ -296,9 +299,6 @@ func GetClusterRole() *rbacv1.ClusterRole {
 					"secrets",
 					"replicationcontrollers",
 					"serviceaccounts",
-					"deployments",
-					"daemonsets",
-					"replicasets",
 					"statefulsets",
 
 				},
