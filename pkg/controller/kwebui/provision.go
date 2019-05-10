@@ -160,6 +160,17 @@ func loginClient(namespace string) (string, error) {
 	}
 	err = RunCommand(cmd, args, env, args)
 	if err != nil {
+		log.Error(err, "Failed to switch to the project. Trying to create it.", "Namespace", namespace)
+
+		cmd, args = "oc", []string{
+			"new-project",
+			namespace,
+		}
+		err = RunCommand(cmd, args, env, args)
+		if err != nil {
+			log.Error(err, "Failed to create project for the web-ui.", "Namespace", namespace)
+		}
+
 		return "", err
 	}
 

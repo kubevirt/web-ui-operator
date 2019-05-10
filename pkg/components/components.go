@@ -131,6 +131,10 @@ func GetDeployment(namespace string, repository string, tag string, imagePullPol
 	return deployment
 }
 
+
+// The GetRole() is probably not needed since the use of `components.go` implicates operator's deployment for cluster-scope (within HCO).
+// To avoid confusion: If deployed independently using the deploy/*.yaml files, the operator is namespace-scoped.
+// TODO: validate the statement above and optionally remove this GetRole() function.
 func GetRole(namespace string) *rbacv1.Role {
 	role := &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
