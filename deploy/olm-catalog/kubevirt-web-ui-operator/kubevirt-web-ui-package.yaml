@@ -1,4 +1,4 @@
 packageName: kubevirt-web-ui
 channels:
   - name: alpha
-    currentCSV: kubevirt-web-ui-operator.v0.1.8
+    currentCSV: kubevirt-web-ui-operator.v0.1.9
