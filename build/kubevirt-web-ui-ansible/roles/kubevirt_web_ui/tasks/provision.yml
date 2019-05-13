@@ -77,7 +77,7 @@
     | {{ openshift_client_binary }} apply -f -
 
 - name: Add service-ca ConfigMap
-  shell: "{{ openshift_client_binary }} apply -f {{ __service_ca_config_file }}"
+  shell: "{{ openshift_client_binary }} apply -f {{ __service_ca_config_file }} -n {{ kubevirt_web_ui_namespace }}"
 
 - name: Add V2VVmware Custom Resource Definition
   shell: "{{ openshift_client_binary }} apply -f {{ __v2vvmware_crd_file }}"
