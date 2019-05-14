@@ -149,6 +149,7 @@ func GetRole(namespace string) *rbacv1.Role {
 			},
 		},
 		Rules: []rbacv1.PolicyRule{
+/*
 			{
 				APIGroups: []string{
 					"",
@@ -251,6 +252,8 @@ func GetRole(namespace string) *rbacv1.Role {
 					"*",
 				},
 			},
+
+ */
 		},
 	}
 	return role
@@ -272,14 +275,14 @@ func GetClusterRole() *rbacv1.ClusterRole {
 			{
 				APIGroups: []string{
 					"oauth.openshift.io",
-                                        "project.openshift.io",
-                                        "template.openshift.io",
-                                        "route.openshift.io",
+					"project.openshift.io",
+					"template.openshift.io",
+					"route.openshift.io",
 					"apiextensions.k8s.io",
 					"kubevirt.io",
 					"extensions",
 					"apps",
-                                        "monitoring.coreos.com",
+					"monitoring.coreos.com",
 				},
 				Resources: []string{
 					"*",
