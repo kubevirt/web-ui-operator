@@ -1,0 +1,141 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[{"apiVersion":"kubevirt.io/v1alpha1","kind":"KWebUI","metadata":{"name":"kubevirt-web-ui"},"spec":{"branding":"okdvirt","imagePullPolicy":"Always","registry_namespace":"kubevirt","registry_url":"quay.io","version":"v2.0.0"}}]'
+    capabilities: Basic Install
+    categories: OpenShift Optional
+    containerImage: quay.io/kubevirt/kubevirt-web-ui-operator
+    createdAt: '2019-04-18T21:00:00Z'
+    description: KubeVirt Web UI
+    repository: https://github.com/kubevirt/kubevirt-web-ui-operator
+  name: kubevirt-web-ui-operator.v0.1.11
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: KubeVirt Web UI
+      displayName: KubeVirt Web UI Resource
+      kind: KWebUI
+      name: kwebuis.kubevirt.io
+      version: v1alpha1
+  description: KubeVirt Web UI
+  displayName: Web Ui Operator
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ''
+          resources:
+          - configmaps
+          - pods
+          - namespaces
+          - services
+          - endpoints
+          - persistentvolumeclaims
+          - events
+          - secrets
+          - replicationcontrollers
+          - serviceaccounts
+          - statefulsets
+          verbs:
+          - '*'
+        - apiGroups:
+          - extensions
+          - apps
+          resources:
+          - deployments
+          - replicasets
+          verbs:
+          - '*'
+        - apiGroups:
+          - oauth.openshift.io
+          - project.openshift.io
+          - template.openshift.io
+          - route.openshift.io
+          - apiextensions.k8s.io
+          - kubevirt.io
+          - extensions
+          - apps
+          - monitoring.coreos.com
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        serviceAccountName: kubevirt-web-ui-operator
+      deployments:
+      - name: kubevirt-web-ui-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: kubevirt-web-ui-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                name: kubevirt-web-ui-operator
+            spec:
+              containers:
+              - env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: kubevirt-web-ui-operator
+                image: quay.io/kubevirt/kubevirt-web-ui-operator:v0.1.11
+                imagePullPolicy: Always
+                name: kubevirt-web-ui-operator
+                ports:
+                - containerPort: 60000
+                  name: metrics
+                readinessProbe:
+                  exec:
+                    command:
+                    - stat
+                    - /tmp/operator-sdk-ready
+                  failureThreshold: 1
+                  initialDelaySeconds: 4
+                  periodSeconds: 10
+                resources: {}
+              serviceAccountName: kubevirt-web-ui-operator
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - KubeVirt
+  - Virtualization
+  - UI
+  labels:
+    alm-owner-kubevirt: kubevirt-web-ui
+    operated-by: kubevirt-web-ui
+  links:
+  - name: KubeVirt
+    url: https://kubevirt.io
+  - name: Source Code
+    url: https://github.com/kubevirt/web-ui-operator
+  maintainers:
+  - email: kubevirt-dev@googlegroups.com
+    name: KubeVirt project
+  maturity: alpha
+  provider:
+    name: KubeVirt project
+  selector:
+    matchLabels:
+      alm-owner-kubevirt: kubevirt-web-ui
+      operated-by: kubevirt-web-ui
+  version: 0.1.11
