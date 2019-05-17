@@ -18,3 +18,4 @@ customization:
   documentationBaseURL: ''
   registry: ''
   imageTagV2V: ''
+  imagePullPolicyV2V: ''
