@@ -4,7 +4,6 @@ metadata:
   name: kubevirt-web-ui
 spec:
   version: "v2.0.0"
-  registry_url: "quay.io"
-  registry_namespace: "kubevirt"
+  registry_url: "quay.io/kubevirt"
   branding: "okdvirt"
   imagePullPolicy: "Always"
