@@ -1,9 +1,10 @@
 #!/bin/bash
 set -ex
 
-if [ x${CSV_VERSION} = x ] ; then
-  echo Please provide CSV_VERSION
-  echo Example: CSV_VERSION=0.1.3 $0
+if [ x${CSV_VERSION} = x ] || [ x${OPERATOR_BRANCH} = x ]; then
+  echo Please provide CSV_VERSION and OPERATOR_BRANCH
+  echo Example: CSV_VERSION=0.1.10-1 OPERATOR_BRANCH=web-ui-v2.0.0 $0
+  echo Example: CSV_VERSION=0.1.12 OPERATOR_BRANCH=master $0
   exit 1
 fi
 
@@ -20,7 +21,7 @@ git diff-index --quiet HEAD || (echo Commit your changes first ; false) # fail i
 
 sleep 5
 
-git checkout master && git fetch --all && git reset --hard ${GIT_REMOTE_NAME}/master
+git checkout ${OPERATOR_BRANCH} && git fetch --all && git reset --hard ${GIT_REMOTE_NAME}/${OPERATOR_BRANCH}
 git status
 git checkout -b olm-${CSV_VERSION}-${UNIQUE}
 ./hack/make-olm.sh
