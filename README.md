@@ -25,7 +25,7 @@ oc apply -f role.yaml
 
 oc apply -f role_binding.yaml
 
-oc apply -f crds/kubevirt_v1alpha1_kwebui_crd.yaml
+oc create -f crds/kubevirt_v1alpha1_kwebui_crd.yaml
 oc apply -f operator.yaml
 ```
 
@@ -51,7 +51,7 @@ oc apply -f service_account.yaml
 oc apply -f role.yaml
 oc apply -f role_binding.yaml
 
-oc apply -f crds/kubevirt_v1alpha1_kwebui_crd.yaml
+oc create -f crds/kubevirt_v1alpha1_kwebui_crd.yaml
 oc apply -f operator.yaml
 ```
 
