@@ -21,8 +21,8 @@ func getBaseTag(tag string) string {
 	return tag[0:last]
 }
 
-func GetDeployment(namespace string, repository string, tag string, imagePullPolicy string) *appsv1.Deployment {
-	image := fmt.Sprintf("%s/%s:%s", repository, Name, tag)
+func GetDeployment(namespace string, repository string, operator_tag string, webui_tag string, imagePullPolicy string) *appsv1.Deployment {
+	image := fmt.Sprintf("%s/%s:%s", repository, Name, operator_tag)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -83,11 +83,11 @@ func GetDeployment(namespace string, repository string, tag string, imagePullPol
 								},
 								{
 									Name:  "OPERATOR_TAG",
-									Value: tag,
+									Value: operator_tag,
 								},
 								{
 									Name:  "WEBUI_TAG",
-									Value: getBaseTag(tag),
+									Value: webui_tag,
 								},
 								{
 									Name:  "BRANDING",
