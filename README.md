@@ -1,3 +1,5 @@
+**⚠️ This repository is deprecated and no longer maintained.**
+
 # Kubevirt Web UI Operator
 The kubernetes [operator](https://github.com/operator-framework) for managing [Kubevirt Web UI](https://github.com/kubevirt/web-ui) deployment.
 Leverages the [operator-sdk](https://github.com/operator-framework/operator-sdk/).
